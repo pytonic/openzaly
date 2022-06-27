@@ -19,11 +19,11 @@
 	<parent>
 		<groupId>com.akaxin</groupId>
 		<artifactId>openzaly-parent</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.0.1</version>
 	</parent>
 	<groupId>com.akaxin.site</groupId>
 	<artifactId>openzaly-storage</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1-RELEASE</version>
 
 	<properties>
 		<maven.compiler.source>1.6</maven.compiler.source>
@@ -34,12 +34,12 @@
 		<dependency>
 			<groupId>org.xerial</groupId>
 			<artifactId>sqlite-jdbc</artifactId>
-			<version>3.8.11.2</version>
+			<!-- <version>3.21.0.1</version> -->
 		</dependency>
 		<dependency>
 			<groupId>com.akaxin.common</groupId>
 			<artifactId>openzaly-common</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1-RELEASE</version>
 		</dependency>
 	</dependencies>
 

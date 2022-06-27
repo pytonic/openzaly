@@ -19,13 +19,23 @@ import java.net.InetSocketAddress;
 import java.util.Base64;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akaxin.common.command.Command;
+import com.akaxin.common.command.CommandResponse;
+import com.akaxin.common.constant.CharsetCoding;
 import com.akaxin.common.constant.HttpUriAction;
+import com.akaxin.common.crypto.AESCrypto;
 import com.akaxin.common.executor.AbstracteExecutor;
+import com.akaxin.common.logs.LogUtils;
+import com.akaxin.common.utils.StringHelper;
 import com.akaxin.proto.core.PluginProto;
+import com.akaxin.site.connector.constant.AkxProject;
+import com.akaxin.site.connector.constant.HttpConst;
+import com.akaxin.site.connector.constant.PluginConst;
+import com.akaxin.site.connector.session.PluginSession;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -44,15 +54,16 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 	private static Logger logger = LoggerFactory.getLogger(HttpServerHandler.class);
 
 	private HttpRequest request;
-	private AbstracteExecutor<Command> executor;
+	private String httpClientIp;
+	private AbstracteExecutor<Command, CommandResponse> executor;
 
-	public HttpServerHandler(AbstracteExecutor<Command> executor) {
+	public HttpServerHandler(AbstracteExecutor<Command, CommandResponse> executor) {
 		this.executor = executor;
 	}
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-		logger.info("client connect to http server... client={}", ctx.channel().toString());
+		logger.debug("{} client connect to http server... client={}", AkxProject.PLN, ctx.channel().toString());
 	}
 
 	@Override
@@ -70,24 +81,39 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 			if (msg instanceof HttpRequest) {
 				request = (HttpRequest) msg;
 				if (!checkLegalRequest()) {
-					logger.error("http request method error. please use post!");
+					logger.error("{} http request method error. please use post!", AkxProject.PLN);
 					ctx.close();
 					return;
 				}
 
-				String clientIp = request.headers().get("X-Forwarded-For");
-				if (clientIp == null) {
-					InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
-					clientIp = address.getAddress().getHostAddress();
-				}
+				String sitePluginId = request.headers().get(PluginConst.SITE_PLUGIN_ID);
 
-				if (!checkLegalClientIp(clientIp)) {
-					logger.error("http request illegal request IP.");
+				if (StringUtils.isEmpty(sitePluginId)) {
+					logger.error("{} http request illegal with error pluginId={}.", AkxProject.PLN, sitePluginId);
 					ctx.close();
 					return;
 				}
-				logger.info("request uri:{} client ip={}", request.uri(), clientIp);
+
+				// set socket ip
+				InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
+				httpClientIp = address.getAddress().getHostAddress();
+
+				if (!checkLegalClientIp(sitePluginId, httpClientIp)) {
+					logger.error("{} http request illegal IP={}.", AkxProject.PLN, httpClientIp);
+					ctx.close();
+					return;
+				}
+
+				// 检测URI，http://127.0.0.1:8280/akaxin-plugin-api/hai/user/friends
+				if (checkRequestUri()) {
+					logger.error("akaxin plugin http request illegal uri={}.", AkxProject.PLN, request.uri());
+					ctx.close();
+					return;
+				}
+
+				logger.debug("{} request uri:{} clientIp={}", AkxProject.PLN, request.uri(), httpClientIp);
 			}
+
 			/**
 			 * HttpContent:表示HTTP实体正文和内容标头的基类 <br>
 			 * method.name=POST 传输消息体存在内容
@@ -104,32 +130,75 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 					return;
 				}
 
+				// String clientIp = request.headers().get(HttpConst.HTTP_H_FORWARDED);
+				String sitePluginId = request.headers().get(PluginConst.SITE_PLUGIN_ID);
 				byte[] contentBytes = new byte[httpByteBuf.readableBytes()];
 				httpByteBuf.readBytes(contentBytes);
 				httpByteBuf.release();
 
-				PluginProto.ProxyPackage proxyPack = PluginProto.ProxyPackage.parseFrom(contentBytes);
-				Map<Integer, String> proxyMap = proxyPack.getProxyContentMap();
+				logger.debug("{} http request IP={} pluginId={}", AkxProject.PLN, httpClientIp, sitePluginId);
 
-				Command command = new Command();
-				if (proxyMap != null) {
-					command.setSiteUserId(proxyMap.get(PluginProto.ProxyKey.CLIENT_SITE_USER_ID_VALUE));
+				if (StringUtils.isEmpty(sitePluginId)) {
+					logger.error("{} http request body illegal pluginId={}.", AkxProject.PLN, sitePluginId);
+					ctx.close();
+					return;
 				}
-				command.setChannelContext(ctx);
-				command.setUri(request.uri());
 
+				// 查询扩展的auth——key
+				String authKey = PluginSession.getInstance().getPluginAuthKey(sitePluginId);
+				logger.debug("http request ip={} pluginId={} authKey={}", httpClientIp, sitePluginId, authKey);
+				if (StringUtils.isNotEmpty(authKey)) {
+					// byte[] tsk = AESCrypto.generateTSKey(authKey);
+					byte[] tsk = authKey.getBytes(CharsetCoding.ISO_8859_1);
+					byte[] decContent = AESCrypto.decrypt(tsk, contentBytes);
+					contentBytes = decContent;
+				}
 
+				PluginProto.ProxyPluginPackage pluginPackage = PluginProto.ProxyPluginPackage.parseFrom(contentBytes);
+				Map<Integer, String> proxyHeader = pluginPackage.getPluginHeaderMap();
 
-				command.setParams(Base64.getDecoder().decode(proxyPack.getData()));
+				String requestTime = proxyHeader.get(PluginProto.PluginHeaderKey.PLUGIN_TIMESTAMP_VALUE);
+				long currentTime = System.currentTimeMillis();
+				boolean timeOut = true;
+				if (StringUtils.isNotEmpty(requestTime)) {
+					long timeMills = Long.valueOf(requestTime);
+					if (currentTime - timeMills < 10 * 1000l) {
+						timeOut = false;
+					}
+				}
 
-				logger.info("http server handler command={}", command.toString());
+				logger.debug("{} client={} http request timeOut={} currTime={} reqTime={}", AkxProject.PLN,
+						httpClientIp, timeOut, currentTime, requestTime);
 
-				this.executor.execute(HttpUriAction.HTTP_ACTION.getUri(), command);
+				if (!timeOut) {
+					Command command = new Command();
+					command.setField(PluginConst.PLUGIN_AUTH_KEY, authKey);
+					if (proxyHeader != null) {
+						command.setSiteUserId(proxyHeader.get(PluginProto.PluginHeaderKey.CLIENT_SITE_USER_ID_VALUE));
+					}
+					command.setChannelContext(ctx);
+					command.setUri(request.uri());
+					command.setParams(Base64.getDecoder().decode(pluginPackage.getData()));
+					command.setClientIp(httpClientIp);
+					command.setStartTime(System.currentTimeMillis());
+					command.setPluginId(sitePluginId);
+					command.setPluginAuthKey(authKey);
 
+					logger.info("{} client={} uri={} http server handler command={}", AkxProject.PLN, httpClientIp,
+							request.uri(), command.toString());
+
+					CommandResponse response = this.executor.execute(HttpUriAction.HTTP_ACTION.getRety(), command);
+					LogUtils.requestResultLog(logger, command, response);
+				} else {
+					// 超时10s，认为此请求失效，直接断开连接
+					ctx.close();
+					logger.error("{} client={} http request error.timeOut={} currTime={} reqTime={}", AkxProject.PLN,
+							httpClientIp, timeOut, currentTime, requestTime);
+				}
 			}
 		} catch (Exception e) {
-			logger.error("http request error.", e);
 			ctx.close();
+			logger.error(StringHelper.format("{} http request error.", AkxProject.PLN), e);
 		}
 	}
 
@@ -140,8 +209,8 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		logger.error("channel exception caught = {}", cause);
 		ctx.close();
+		logger.error(StringHelper.format("{} channel exception caught", AkxProject.PLN), cause);
 	}
 
 	/**
@@ -151,16 +220,31 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 	 */
 	private boolean checkLegalRequest() {
 		String methodName = request.method().name();
-		if ("POST".equals(methodName)) {
+		if (HttpConst.HTTP_M_POST.equals(methodName)) {
 			return true;
 		}
 		return false;
 	}
 
 	// 预留处理请求ip过滤
-	private boolean checkLegalClientIp(String ip) {
-		// #TODO
-		// logger.info("do nothing to http client ip:{}", ip);
+	private boolean checkLegalClientIp(String pluginId, String ip) {
+		// #TODO 使用缓存
+		String allowIps = PluginSession.getInstance().getPluginAllowIp(pluginId);
+		if (StringUtils.isNotEmpty(allowIps)) {
+			if (!allowIps.contains(ip)) {
+				return false;
+			}
+		}
 		return true;
 	}
+
+	private boolean checkRequestUri() {
+		String uri = request.uri();
+		if (StringUtils.isNotEmpty(uri)) {
+			return uri.startsWith("/akaxin-plugin-api/hai/") || uri.startsWith("//akaxin-plugin-api/hai/")
+					|| uri.startsWith("akaxin-plugin-api/hai/");
+		}
+		return false;
+	}
+
 }

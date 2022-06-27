@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akaxin.common.logs.LogUtils;
+import com.akaxin.site.storage.bean.ApplyFriendBean;
 import com.akaxin.site.storage.bean.ApplyUserBean;
 import com.akaxin.site.storage.sqlite.manager.SQLiteJDBCManager;
 import com.akaxin.site.storage.sqlite.sql.SQLConst;
@@ -58,8 +59,7 @@ public class SQLiteFriendApplyDao {
 		preState.setLong(4, System.currentTimeMillis());
 		result = preState.executeUpdate();
 
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, +result, sql + siteUserId + "," + siteFriendId);
+		LogUtils.dbDebugLog(logger, startTime, result, sql, siteUserId, siteFriendId);
 		return result > 0;
 	}
 
@@ -73,8 +73,7 @@ public class SQLiteFriendApplyDao {
 		preState.setString(2, siteFriendId);
 		result = preState.executeUpdate();
 
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, ",result=" + result, sql + siteUserId);
+		LogUtils.dbDebugLog(logger, startTime, result, sql, siteUserId);
 		return result > 0;
 	}
 
@@ -90,24 +89,53 @@ public class SQLiteFriendApplyDao {
 		ResultSet rs = preState.executeQuery();
 		num = rs.getInt(1);
 
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, num, sql + siteUserId + "," + siteFriendId);
+		LogUtils.dbDebugLog(logger, startTime, num, sql, siteUserId, siteFriendId);
 		return num;
 	}
 
 	public int getApplyCount(String siteUserId) throws SQLException {
 		long startTime = System.currentTimeMillis();
 		int num = 0;
-		String sql = "SELECT COUNT(site_user_id) FROM " + FRIEND_APPLY_TABLE + " WHERE site_user_id=?;";
+		String sql = "SELECT COUNT(distinct site_friend_id) FROM "+FRIEND_APPLY_TABLE+" WHERE site_user_id=? ";
 
 		PreparedStatement preState = SQLiteJDBCManager.getConnection().prepareStatement(sql);
 		preState.setString(1, siteUserId);
 		ResultSet rs = preState.executeQuery();
 		num = rs.getInt(1);
 
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, num, sql + siteUserId);
+		LogUtils.dbDebugLog(logger, startTime, num, sql, siteUserId);
 		return num;
+	}
+
+	/**
+	 * 
+	 * @param siteUserId
+	 *            被请求者
+	 * @param siteFriendId
+	 *            请求者
+	 * @return
+	 * @throws SQLException
+	 */
+	public ApplyFriendBean getApplyInfo(String siteUserId, String siteFriendId) throws SQLException {
+		long startTime = System.currentTimeMillis();
+		String sql = "SELECT site_user_id,site_friend_id,apply_reason,MAX(apply_time) FROM " + FRIEND_APPLY_TABLE
+				+ " WHERE site_user_id=? AND site_friend_id=?;";
+
+		PreparedStatement preState = SQLiteJDBCManager.getConnection().prepareStatement(sql);
+		preState.setString(1, siteUserId);
+		preState.setString(2, siteFriendId);
+		ResultSet rs = preState.executeQuery();
+		ApplyFriendBean bean = null;
+		if (rs.next()) {
+			bean = new ApplyFriendBean();
+			bean.setSiteUserId(rs.getString(1));
+			bean.setSiteFriendId(rs.getString(2));
+			bean.setApplyInfo(rs.getString(3));
+			bean.setApplyTime(rs.getLong(4));
+		}
+
+		LogUtils.dbDebugLog(logger, startTime, bean, sql, siteUserId, siteFriendId);
+		return bean;
 	}
 
 	/**
@@ -121,9 +149,7 @@ public class SQLiteFriendApplyDao {
 		long startTime = System.currentTimeMillis();
 		List<ApplyUserBean> applyUsers = new ArrayList<ApplyUserBean>();
 
-		String sql = "SELECT a.site_friend_id,b.user_name,b.user_photo,a.apply_reason,MAX(a.apply_time) FROM "
-				+ FRIEND_APPLY_TABLE + " AS a LEFT JOIN " + SQLConst.SITE_USER_PROFILE
-				+ " AS b WHERE a.site_friend_id=b.site_user_id AND a.site_user_id=?;";
+		String sql = "SELECT a.site_friend_id,b.user_name,b.user_photo,a.apply_reason,max(a.apply_time) FROM  "+FRIEND_APPLY_TABLE+" AS a LEFT JOIN "+SQLConst.SITE_USER_PROFILE+" AS b WHERE a.site_friend_id=b.site_user_id AND a.site_user_id=?  group by a.site_friend_id ";
 
 		PreparedStatement preState = SQLiteJDBCManager.getConnection().prepareStatement(sql);
 		preState.setString(1, siteUserId);
@@ -138,8 +164,7 @@ public class SQLiteFriendApplyDao {
 			applyUsers.add(userBean);
 		}
 
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, applyUsers.size(), sql + siteUserId);
+		LogUtils.dbDebugLog(logger, startTime, applyUsers.size(), sql, siteUserId);
 		return applyUsers;
 	}
 }

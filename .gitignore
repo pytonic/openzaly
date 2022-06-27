@@ -5,3 +5,9 @@
 *.swp
 *.iml
 target/
+.DS_Store
+openzalyDB.sqlite3
+stdout.log
+openzaly-server.jar
+site-file/
+site-logs/

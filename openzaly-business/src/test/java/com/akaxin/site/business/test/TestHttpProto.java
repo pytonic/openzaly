@@ -12,25 +12,17 @@ public class TestHttpProto {
 	}
 
 	private static byte[] testHttpPost() throws IOException {
-		String pluginUrl = "http://192.168.1.106/siteMember/applyAddFriend";
-		String siteUserId = "test1111";
-		String requestParams = "Test";
-		PluginProto.ProxyPackage proxyPackage = PluginProto.ProxyPackage.newBuilder()
-				.putProxyContent(PluginProto.ProxyKey.CLIENT_SITE_USER_ID_VALUE, siteUserId).setData(requestParams)
-				.build();
-		byte[] httpResposne = ZalyHttpClient.getInstance().postBytes(pluginUrl, proxyPackage.toByteArray());
-		
-		System.out.println("response = " + httpResposne.length);
+//		String pluginUrl = "http://192.168.1.106/siteMember/applyAddFriend";
+//		String siteUserId = "test1111";
+//		String requestParams = "Test";
+//		PluginProto.ProxyPackage proxyPackage = PluginProto.ProxyPackage.newBuilder()
+//				.putProxyContent(PluginProto.ProxyKey.CLIENT_SITE_USER_ID_VALUE, siteUserId).setData(requestParams)
+//				.build();
+//		byte[] httpResposne = ZalyHttpClient.getInstance().postBytes(pluginUrl, proxyPackage.toByteArray());
+//		
+//		System.out.println("response = " + httpResposne.length);
 
-		return httpResposne;
+		return null;
 	}
 
-	private static byte[] testHttpGet() throws Exception {
-		String siteUserId = "SAM123455";
-		String url2 = "http://192.168.1.106/siteMember/members" + "?siteUserId=" + siteUserId;
-		System.out.println("url = " + url2);
-		byte[] httpResponse = ZalyHttpClient.getInstance().get(url2);
-
-		return httpResponse;
-	}
 }

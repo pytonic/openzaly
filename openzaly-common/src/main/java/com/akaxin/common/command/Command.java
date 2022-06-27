@@ -18,8 +18,11 @@ package com.akaxin.common.command;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.akaxin.common.channel.ChannelSession;
 import com.akaxin.common.constant.CommandConst;
+import com.akaxin.common.utils.StringHelper;
 
 import io.netty.channel.ChannelHandlerContext;
 
@@ -30,15 +33,17 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 2017.09.30
  */
 public class Command {
-	private String siteUserId;
+	private String siteUserId;// 执行者
 	private String deviceId;
-	private String rety; // request type
+	private String globalUserId;
+	private String rety; // request type，im/api/hai
 	private String service;
 	private String method;
-	private String uri;
 	private Map<Integer, String> header;
 	private byte[] params;
 	private CommandResponse response; // response
+
+	private boolean proxy;// 是否为代理请求
 
 	private Map<String, Object> fields = new HashMap<String, Object>();
 
@@ -52,7 +57,10 @@ public class Command {
 	}
 
 	public String getAction() {
-		return this.rety + "." + this.service + "." + this.method;
+		if ("im".equals(this.rety) || "api".equals(this.rety)) {
+			return this.rety + "." + this.service + "." + this.method;
+		}
+		return null;
 	}
 
 	public String getDeviceId() {
@@ -69,6 +77,14 @@ public class Command {
 
 	public void setSiteUserId(String siteUserId) {
 		this.siteUserId = siteUserId;
+	}
+
+	public String getGlobalUserId() {
+		return globalUserId;
+	}
+
+	public void setGlobalUserId(String globalUserId) {
+		this.globalUserId = globalUserId;
 	}
 
 	public String getRety() {
@@ -96,11 +112,19 @@ public class Command {
 	}
 
 	public String getUri() {
-		return uri;
+		if ("hai".equals(this.rety)) {
+			return "/" + this.rety + "/" + this.service + "/" + this.method;
+		}
+		return null;
 	}
 
 	public void setUri(String uri) {
-		this.uri = uri;
+		uri = StringHelper.clearRepeated(uri, "/");
+		String[] splitStr = uri.split("/");
+		int index = splitStr.length - 3;
+		this.rety = splitStr[index];
+		this.service = splitStr[index + 1];
+		this.method = splitStr[index + 2];
 	}
 
 	public Map<Integer, String> getHeader() {
@@ -140,6 +164,26 @@ public class Command {
 		return this;
 	}
 
+	public Command setClientVersion(String version) {
+		this.fields.put(CommandConst.CLIENT_VERSION, version);
+		return this;
+	}
+
+	public String getClientVersion() {
+		return this.getField(CommandConst.CLIENT_VERSION, String.class);
+	}
+
+	public int getProtoVersion() {
+		String v = this.getField(CommandConst.CLIENT_VERSION, String.class);
+		if (StringUtils.isNotEmpty(v)) {
+			String[] vstr = v.split("\\.");
+			if (vstr.length == 3) {
+				return Integer.parseInt(vstr[2]);
+			}
+		}
+		return 0;
+	}
+
 	public Command setSiteFriendId(String siteFriendId) {
 		this.fields.put(CommandConst.SITE_FRIEND_ID, siteFriendId);
 		return this;
@@ -149,6 +193,15 @@ public class Command {
 		return this.getField(CommandConst.SITE_FRIEND_ID, String.class);
 	}
 
+	public Command setProxySiteUserId(String proxySiteUserId) {
+		this.fields.put(CommandConst.PROXY_SITE_USER_ID, proxySiteUserId);
+		return this;
+	}
+
+	public String getProxySiteUserId() {
+		return this.getField(CommandConst.PROXY_SITE_USER_ID, String.class);
+	}
+
 	public Command setSiteGroupId(String siteGroupId) {
 		this.fields.put(CommandConst.SITE_GROUP_ID, siteGroupId);
 		return this;
@@ -156,6 +209,70 @@ public class Command {
 
 	public String getSiteGroupId() {
 		return this.getField(CommandConst.SITE_GROUP_ID, String.class);
+	}
+
+	public Command setClientIp(String clientIp) {
+		this.fields.put(CommandConst.CLIENT_IP, clientIp);
+		return this;
+	}
+
+	public String getClientIp() {
+		return this.getField(CommandConst.CLIENT_IP, String.class);
+	}
+
+	public Command setPluginId(String pluginId) {
+		this.fields.put(CommandConst.PLUGIN_ID, pluginId);
+		return this;
+	}
+
+	public String getPluginId() {
+		return this.getField(CommandConst.PLUGIN_ID, String.class);
+	}
+
+	public Command setPluginAuthKey(String authKey) {
+		this.fields.put(CommandConst.PLUGIN_AUTH_KEY, authKey);
+		return this;
+	}
+
+	public String getPluginAuthKey() {
+		return this.getField(CommandConst.PLUGIN_AUTH_KEY, String.class);
+	}
+
+	public Command setMsgType(int msgType) {
+		this.fields.put(CommandConst.MSG_TYPE, msgType);
+		return this;
+	}
+
+	public int getMsgType() {
+		return this.getField(CommandConst.MSG_TYPE, Integer.class);
+	}
+
+	public Command setStartTime(long time) {
+		this.fields.put(CommandConst.START_TIME, time);
+		return this;
+	}
+
+	public long getStartTime() {
+		Long time = this.getField(CommandConst.START_TIME, Long.class);
+		return time == null ? 0 : time;
+	}
+
+	public Command setEndTime(long time) {
+		this.fields.put(CommandConst.END_TIME, time);
+		return this;
+	}
+
+	public long getEndTime() {
+		Long time = this.getField(CommandConst.END_TIME, Long.class);
+		return time == null ? 0 : time;
+	}
+
+	public boolean isProxy() {
+		return proxy;
+	}
+
+	public void setProxy(boolean proxy) {
+		this.proxy = proxy;
 	}
 
 	public Command setChannelSession(ChannelSession channelSession) {
@@ -185,9 +302,8 @@ public class Command {
 	}
 
 	public String toString() {
-		return "deviceId=" + this.deviceId + ",siteUserId=" + this.siteUserId + ",requestType=" + this.rety
-				+ ",service=" + this.service + ",method=" + this.method + ",uri=" + this.uri + " header={}"
-				+ this.header;
+		return StringHelper.format("cmd: siteUserId={} deviceId={} rety={} service={} method={} header={}",
+				this.siteUserId, this.deviceId, this.rety, this.service, this.method, this.header);
 	}
 
 }

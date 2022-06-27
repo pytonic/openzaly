@@ -8,7 +8,7 @@ import com.akaxin.site.storage.bean.U2MessageBean;
 
 /**
  * 处理二人消息，群消息等
- * 
+ *
  * @author Sam{@link an.guoyue254@gmail.com}
  * @since 2017-11-20 12:49:15
  */
@@ -24,14 +24,30 @@ public interface IMessageDao {
 
 	long queryMaxU2Pointer(String userId) throws SQLException;
 
+	long queryMaxU2MessageId(String userId) throws SQLException;
+
+	List<U2MessageBean> queryU2MessageByMsgId(List<String> msgIds) throws SQLException;
+
 	// group message
 	public boolean saveGroupMessage(GroupMessageBean gmsgBean) throws SQLException;
 
-	public List<GroupMessageBean> queryGroupMessage(String groupId, String userId, String deviceId, long start)
-			throws SQLException;
+	public List<GroupMessageBean> queryGroupMessage(String groupId, String userId, String deviceId, long start,
+			int limit) throws SQLException;
+
+	public long queryGroupMessagePointer(String groupId, String siteUserId, String deviceId) throws SQLException;
 
 	public boolean updateGroupPointer(String gid, String userId, String deviceId, long finish) throws SQLException;
 
 	public long queryMaxGroupPointer(String groupId) throws SQLException;
 
+	public long queryMaxUserGroupPointer(String groupId, String siteUserId) throws SQLException;
+
+	List<GroupMessageBean> queryGroupMesageByMsgId(List<String> msgIds) throws SQLException;
+
+	// manager
+	public int queryU2MessagePerDay(long now, int day) throws SQLException;
+
+	boolean delUserMessage(String siteUserId) throws SQLException;
+
+	List<String> queryMessageFile(String siteUserId) throws SQLException;
 }

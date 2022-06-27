@@ -1,22 +1,21 @@
-/** 
+/**
  * Copyright 2018-2028 Akaxin Group
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 package com.akaxin.site.business.dao;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -25,11 +24,12 @@ import org.slf4j.LoggerFactory;
 import com.akaxin.site.storage.api.IUserProfileDao;
 import com.akaxin.site.storage.bean.SimpleUserBean;
 import com.akaxin.site.storage.bean.SimpleUserRelationBean;
+import com.akaxin.site.storage.bean.UserFriendBean;
 import com.akaxin.site.storage.bean.UserProfileBean;
 import com.akaxin.site.storage.service.UserProfileDaoService;
 
 /**
- * 
+ *
  * @author Sam{@link an.guoyue254@gmail.com}
  * @since 2017-11-09 20:44:21
  */
@@ -42,12 +42,40 @@ public class UserProfileDao {
 		return instance;
 	}
 
+	public String getSiteUserIdByGlobalUserId(String globalUserId) {
+		try {
+			return userProfileDao.getSiteUserIdByGlobalUserId(globalUserId);
+		} catch (SQLException e) {
+			logger.error("get siteUserId by globalUserId error.", e);
+		}
+		return null;
+	}
+
+	public String getSiteLoginIdBySiteUserId(String siteUserId) {
+		try {
+			return userProfileDao.getSiteLoginIdBySiteUserId(siteUserId);
+		} catch (SQLException e) {
+			logger.error("get siteLoginId by siteUserId error.", e);
+		}
+		return null;
+	}
+
 	public SimpleUserBean getSimpleProfileById(String siteUserId) {
 		SimpleUserBean userBean = new SimpleUserBean();
 		try {
 			userBean = userProfileDao.getSimpleProfileById(siteUserId);
 		} catch (SQLException e) {
 			logger.error("get User Simple Profile error.", e);
+		}
+		return userBean;
+	}
+
+	public SimpleUserBean getSimpleProfileByGlobalUserId(String globalUserId) {
+		SimpleUserBean userBean = new SimpleUserBean();
+		try {
+			userBean = userProfileDao.getSimpleProfileByGlobalUserId(globalUserId);
+		} catch (SQLException e) {
+			logger.error("get User Simple Profile by globalUserId error.", e);
 		}
 		return userBean;
 	}
@@ -62,14 +90,14 @@ public class UserProfileDao {
 		return userBean;
 	}
 
-	public List<SimpleUserBean> getSimpleProfileByName(String userName) {
-		List<SimpleUserBean> userList = new ArrayList<SimpleUserBean>();
+	public UserFriendBean getFriendProfileById(String siteUserId, String siteFriendId) {
+		UserFriendBean bean = null;
 		try {
-			userList = userProfileDao.getSimpleProfileByName(userName);
+			bean = userProfileDao.getFriendProfileById(siteUserId, siteFriendId);
 		} catch (SQLException e) {
-			logger.error("get User Simple Profile error.", e);
+			logger.error("get friend Profile error.", e);
 		}
-		return userList;
+		return bean;
 	}
 
 	public UserProfileBean getUserProfileById(String siteUserId) {
@@ -86,6 +114,9 @@ public class UserProfileDao {
 		UserProfileBean userBean = null;
 		try {
 			userBean = userProfileDao.getUserProfileByGlobalUserId(id);
+			if (userBean != null) {
+				userBean.setGlobalUserId(id);
+			}
 		} catch (SQLException e) {
 			logger.error("get user profile by userId error.", e);
 		}
@@ -105,7 +136,7 @@ public class UserProfileDao {
 	public boolean updateUserProfile(UserProfileBean userBean) {
 		int result = 0;
 		try {
-			result = userProfileDao.updateUserProfile(userBean);
+			result = userProfileDao.updateProfile(userBean);
 		} catch (SQLException e) {
 			logger.error("update user profile error.", e);
 		}
@@ -118,7 +149,7 @@ public class UserProfileDao {
 	 * 		1.status=0,站点正常用户状态，新用户默认状态
 	 *  		2.status=1,站点禁封状态，无法登陆站点
 	 * </pre>
-	 * 
+	 *
 	 * @param siteUserId
 	 * @param status
 	 * @return
@@ -143,6 +174,15 @@ public class UserProfileDao {
 		return pageList;
 	}
 
+	public int getTotalUserNum() {
+		try {
+			return userProfileDao.getTotalUserNum();
+		} catch (SQLException e) {
+			logger.error("get total user num error.", e);
+		}
+		return 0;
+	}
+
 	public List<SimpleUserBean> getUserPageList(int pageNum, int pageSize) {
 		List<SimpleUserBean> pageList = null;
 		try {
@@ -151,5 +191,18 @@ public class UserProfileDao {
 			logger.error("get user page list.", e);
 		}
 		return pageList;
+	}
+
+	public boolean getUserMute(String siteUserId) throws SQLException {
+		return userProfileDao.isMute(siteUserId);
+	}
+
+	public boolean updateUserMute(String siteUserId, boolean mute) {
+		try {
+			return userProfileDao.updateMute(siteUserId, mute);
+		} catch (SQLException e) {
+			logger.error("update user mute error.", e);
+		}
+		return false;
 	}
 }

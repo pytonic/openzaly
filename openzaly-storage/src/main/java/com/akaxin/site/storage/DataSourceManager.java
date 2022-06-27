@@ -15,11 +15,13 @@
  */
 package com.akaxin.site.storage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.sql.SQLException;
 
-import com.akaxin.site.storage.sqlite.manager.DBConfigBean;
+import com.akaxin.site.storage.exception.InitDatabaseException;
+import com.akaxin.site.storage.exception.UpgradeDatabaseException;
+import com.akaxin.site.storage.sqlite.manager.DBConfig;
 import com.akaxin.site.storage.sqlite.manager.SQLiteJDBCManager;
+import com.akaxin.site.storage.sqlite.manager.SQLiteUpgrade;
 
 /**
  * 数据源初始化管理，不做具体操作对外提供方法
@@ -28,18 +30,24 @@ import com.akaxin.site.storage.sqlite.manager.SQLiteJDBCManager;
  * @since 2018-01-31 12:15:15
  */
 public class DataSourceManager {
-	private static Logger logger = LoggerFactory.getLogger(DataSourceManager.class);
 
 	private DataSourceManager() {
 
 	}
 
-	public static void init(DBConfigBean bean) {
+	public static void init(DBConfig config) throws InitDatabaseException, UpgradeDatabaseException {
 		try {
-			SQLiteJDBCManager.initSqliteDB(bean);
-			logger.info("init sqlite datasource finish.");
-		} catch (Exception e) {
-			logger.error("init sqlite datasource error.", e);
+			SQLiteJDBCManager.initSqliteDB(config);
+		} catch (SQLException e) {
+			throw new InitDatabaseException("init database error", e);
+		}
+	}
+
+	public static int upgrade(DBConfig config) throws UpgradeDatabaseException {
+		try {
+			return SQLiteUpgrade.upgradeSqliteDB(config);
+		} catch (SQLException e) {
+			throw new UpgradeDatabaseException("upgrade database error", e);
 		}
 	}
 }

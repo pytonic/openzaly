@@ -35,6 +35,11 @@ public class UicServiceDao implements IUicDao {
 	}
 
 	@Override
+	public boolean batchAddUic(UicBean bean, int num, int length) throws SQLException {
+		return SQLiteUICDao.getInstance().batchAddUIC(bean, num, length);
+	}
+
+	@Override
 	public boolean updateUic(UicBean bean) throws SQLException {
 		return SQLiteUICDao.getInstance().updateUIC(bean);
 	}
@@ -53,4 +58,5 @@ public class UicServiceDao implements IUicDao {
 	public List<UicBean> getAllUicPageList(int pageNum, int pageSize) throws SQLException {
 		return SQLiteUICDao.getInstance().queryAllUicList(pageNum, pageSize);
 	}
+
 }

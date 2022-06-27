@@ -18,76 +18,86 @@ package com.akaxin.site.message.group.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akaxin.common.channel.ChannelSession;
 import com.akaxin.common.command.Command;
-import com.akaxin.common.command.RedisCommand;
-import com.akaxin.common.constant.CommandConst;
-import com.akaxin.proto.client.ImStcMessageProto;
+import com.akaxin.common.logs.LogUtils;
 import com.akaxin.proto.core.CoreProto;
-import com.akaxin.proto.core.CoreProto.MsgType;
 import com.akaxin.proto.site.ImCtsMessageProto;
 import com.akaxin.site.storage.api.IMessageDao;
 import com.akaxin.site.storage.bean.GroupMessageBean;
 import com.akaxin.site.storage.service.MessageDaoService;
 
-import io.netty.channel.Channel;
-
+/**
+ * 群文本消息
+ * 
+ * @author Sam{@link an.guoyue254@gmail.com}
+ * @since 2018-04-26 15:13:53
+ */
 public class GroupMessageTextHandler extends AbstractGroupHandler<Command> {
 	private static final Logger logger = LoggerFactory.getLogger(GroupMessageTextHandler.class);
 	private IMessageDao messageDao = new MessageDaoService();
 
-	public boolean handle(Command command) {
-		ChannelSession channelSession = command.getChannelSession();
+	public Boolean handle(Command command) {
 		try {
-			ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest
-					.parseFrom(command.getParams());
-			int type = request.getType().getNumber();
+			int type = command.getMsgType();
+
 			if (CoreProto.MsgType.GROUP_TEXT_VALUE == type) {
-				// String siteUserId = request.getGroupText().getSiteUserId();
+				ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest
+						.parseFrom(command.getParams());
 				String siteUserId = command.getSiteUserId();
 				String deviceId = command.getDeviceId();
+
+				String proxySiteUserId = request.getGroupText().getSiteUserId();
 				String gmsgId = request.getGroupText().getMsgId();
 				String groupId = request.getGroupText().getSiteGroupId();
 				String groupText = request.getGroupText().getText().toStringUtf8();
 
+				long msgTime = System.currentTimeMillis();
 				GroupMessageBean gmsgBean = new GroupMessageBean();
 				gmsgBean.setMsgId(gmsgId);
 				gmsgBean.setSendUserId(siteUserId);
+				gmsgBean.setSendUserId(command.isProxy() ? proxySiteUserId : siteUserId);
 				gmsgBean.setSendDeviceId(deviceId);
 				gmsgBean.setSiteGroupId(groupId);
 				gmsgBean.setContent(groupText);
 				gmsgBean.setMsgType(type);
-				gmsgBean.setMsgTime(System.currentTimeMillis());
+				gmsgBean.setMsgTime(msgTime);
 
-				logger.info("Group Message Text bean={}", gmsgBean.toString());
+				LogUtils.requestDebugLog(logger, command, gmsgBean.toString());
 
-				messageDao.saveGroupMessage(gmsgBean);
-				msgResponse(channelSession.getChannel(), command, siteUserId, groupId, gmsgId);
-
+				boolean success = messageDao.saveGroupMessage(gmsgBean);
+				msgStatusResponse(command, gmsgId, msgTime, success);
+				return success;
 			}
 			return true;
 		} catch (Exception e) {
-			logger.error("Group Message Text error!", e);
+			LogUtils.requestErrorLog(logger, command, this.getClass(), e);
 		}
 
 		return false;
 	}
 
-	private void msgResponse(Channel channel, Command command, String from, String to, String msgId) {
-		CoreProto.MsgStatus status = CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgStatus(1).build();
-
-		ImStcMessageProto.MsgWithPointer statusMsg = ImStcMessageProto.MsgWithPointer.newBuilder()
-				.setType(MsgType.MSG_STATUS).setStatus(status).build();
-
-		ImStcMessageProto.ImStcMessageRequest request = ImStcMessageProto.ImStcMessageRequest.newBuilder()
-				.addList(0, statusMsg).build();
-
-		CoreProto.TransportPackageData data = CoreProto.TransportPackageData.newBuilder()
-				.setData(request.toByteString()).build();
-
-		channel.writeAndFlush(new RedisCommand().add(CommandConst.PROTOCOL_VERSION).add(CommandConst.IM_MSG_TOCLIENT)
-				.add(data.toByteArray()));
-
-	}
+	// private void msgResponse(Channel channel, Command command, String from,
+	// String to, String msgId, long msgTime) {
+	// CoreProto.MsgStatus status =
+	// CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgServerTime(msgTime)
+	// .setMsgStatus(1).build();
+	//
+	// ImStcMessageProto.MsgWithPointer statusMsg =
+	// ImStcMessageProto.MsgWithPointer.newBuilder()
+	// .setType(MsgType.MSG_STATUS).setStatus(status).build();
+	//
+	// ImStcMessageProto.ImStcMessageRequest request =
+	// ImStcMessageProto.ImStcMessageRequest.newBuilder()
+	// .addList(statusMsg).build();
+	//
+	// CoreProto.TransportPackageData data =
+	// CoreProto.TransportPackageData.newBuilder()
+	// .setData(request.toByteString()).build();
+	//
+	// channel.writeAndFlush(new
+	// RedisCommand().add(CommandConst.PROTOCOL_VERSION).add(CommandConst.IM_MSG_TOCLIENT)
+	// .add(data.toByteArray()));
+	//
+	// }
 
 }

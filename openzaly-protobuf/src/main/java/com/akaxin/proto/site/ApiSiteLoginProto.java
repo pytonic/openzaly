@@ -56,6 +56,24 @@ public final class ApiSiteLoginProto {
 
     /**
      * <pre>
+     *手机号授权token
+     * </pre>
+     *
+     * <code>optional string phone_token = 3;</code>
+     */
+    java.lang.String getPhoneToken();
+    /**
+     * <pre>
+     *手机号授权token
+     * </pre>
+     *
+     * <code>optional string phone_token = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getPhoneTokenBytes();
+
+    /**
+     * <pre>
      *用户设备名称
      * </pre>
      *
@@ -140,6 +158,7 @@ public final class ApiSiteLoginProto {
     private ApiSiteLoginRequest() {
       userIdPubk_ = "";
       userDeviceIdPubk_ = "";
+      phoneToken_ = "";
       userDeviceName_ = "";
       userToken_ = "";
       userIdSignBase64_ = "";
@@ -181,6 +200,12 @@ public final class ApiSiteLoginProto {
               java.lang.String s = input.readStringRequireUtf8();
 
               userDeviceIdPubk_ = s;
+              break;
+            }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              phoneToken_ = s;
               break;
             }
             case 34: {
@@ -308,6 +333,48 @@ public final class ApiSiteLoginProto {
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
         userDeviceIdPubk_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int PHONE_TOKEN_FIELD_NUMBER = 3;
+    private volatile java.lang.Object phoneToken_;
+    /**
+     * <pre>
+     *手机号授权token
+     * </pre>
+     *
+     * <code>optional string phone_token = 3;</code>
+     */
+    public java.lang.String getPhoneToken() {
+      java.lang.Object ref = phoneToken_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        phoneToken_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     *手机号授权token
+     * </pre>
+     *
+     * <code>optional string phone_token = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getPhoneTokenBytes() {
+      java.lang.Object ref = phoneToken_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        phoneToken_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
@@ -500,6 +567,9 @@ public final class ApiSiteLoginProto {
       if (!getUserDeviceIdPubkBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, userDeviceIdPubk_);
       }
+      if (!getPhoneTokenBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, phoneToken_);
+      }
       if (!getUserDeviceNameBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, userDeviceName_);
       }
@@ -524,6 +594,9 @@ public final class ApiSiteLoginProto {
       }
       if (!getUserDeviceIdPubkBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, userDeviceIdPubk_);
+      }
+      if (!getPhoneTokenBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, phoneToken_);
       }
       if (!getUserDeviceNameBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, userDeviceName_);
@@ -557,6 +630,8 @@ public final class ApiSiteLoginProto {
           .equals(other.getUserIdPubk());
       result = result && getUserDeviceIdPubk()
           .equals(other.getUserDeviceIdPubk());
+      result = result && getPhoneToken()
+          .equals(other.getPhoneToken());
       result = result && getUserDeviceName()
           .equals(other.getUserDeviceName());
       result = result && getUserToken()
@@ -579,6 +654,8 @@ public final class ApiSiteLoginProto {
       hash = (53 * hash) + getUserIdPubk().hashCode();
       hash = (37 * hash) + USER_DEVICE_ID_PUBK_FIELD_NUMBER;
       hash = (53 * hash) + getUserDeviceIdPubk().hashCode();
+      hash = (37 * hash) + PHONE_TOKEN_FIELD_NUMBER;
+      hash = (53 * hash) + getPhoneToken().hashCode();
       hash = (37 * hash) + USER_DEVICE_NAME_FIELD_NUMBER;
       hash = (53 * hash) + getUserDeviceName().hashCode();
       hash = (37 * hash) + USER_TOKEN_FIELD_NUMBER;
@@ -709,6 +786,8 @@ public final class ApiSiteLoginProto {
 
         userDeviceIdPubk_ = "";
 
+        phoneToken_ = "";
+
         userDeviceName_ = "";
 
         userToken_ = "";
@@ -741,6 +820,7 @@ public final class ApiSiteLoginProto {
         com.akaxin.proto.site.ApiSiteLoginProto.ApiSiteLoginRequest result = new com.akaxin.proto.site.ApiSiteLoginProto.ApiSiteLoginRequest(this);
         result.userIdPubk_ = userIdPubk_;
         result.userDeviceIdPubk_ = userDeviceIdPubk_;
+        result.phoneToken_ = phoneToken_;
         result.userDeviceName_ = userDeviceName_;
         result.userToken_ = userToken_;
         result.userIdSignBase64_ = userIdSignBase64_;
@@ -792,6 +872,10 @@ public final class ApiSiteLoginProto {
         }
         if (!other.getUserDeviceIdPubk().isEmpty()) {
           userDeviceIdPubk_ = other.userDeviceIdPubk_;
+          onChanged();
+        }
+        if (!other.getPhoneToken().isEmpty()) {
+          phoneToken_ = other.phoneToken_;
           onChanged();
         }
         if (!other.getUserDeviceName().isEmpty()) {
@@ -1010,6 +1094,95 @@ public final class ApiSiteLoginProto {
   checkByteStringIsUtf8(value);
         
         userDeviceIdPubk_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object phoneToken_ = "";
+      /**
+       * <pre>
+       *手机号授权token
+       * </pre>
+       *
+       * <code>optional string phone_token = 3;</code>
+       */
+      public java.lang.String getPhoneToken() {
+        java.lang.Object ref = phoneToken_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          phoneToken_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       *手机号授权token
+       * </pre>
+       *
+       * <code>optional string phone_token = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPhoneTokenBytes() {
+        java.lang.Object ref = phoneToken_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          phoneToken_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       *手机号授权token
+       * </pre>
+       *
+       * <code>optional string phone_token = 3;</code>
+       */
+      public Builder setPhoneToken(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        phoneToken_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *手机号授权token
+       * </pre>
+       *
+       * <code>optional string phone_token = 3;</code>
+       */
+      public Builder clearPhoneToken() {
+        
+        phoneToken_ = getDefaultInstance().getPhoneToken();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *手机号授权token
+       * </pre>
+       *
+       * <code>optional string phone_token = 3;</code>
+       */
+      public Builder setPhoneTokenBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        phoneToken_ = value;
         onChanged();
         return this;
       }
@@ -1457,6 +1630,24 @@ public final class ApiSiteLoginProto {
      */
     com.google.protobuf.ByteString
         getSiteUserIdBytes();
+
+    /**
+     * <pre>
+     *返回站点的设备ID
+     * </pre>
+     *
+     * <code>optional string site_device_id = 3;</code>
+     */
+    java.lang.String getSiteDeviceId();
+    /**
+     * <pre>
+     *返回站点的设备ID
+     * </pre>
+     *
+     * <code>optional string site_device_id = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getSiteDeviceIdBytes();
   }
   /**
    * Protobuf type {@code site.ApiSiteLoginResponse}
@@ -1472,6 +1663,7 @@ public final class ApiSiteLoginProto {
     private ApiSiteLoginResponse() {
       userSessionId_ = "";
       siteUserId_ = "";
+      siteDeviceId_ = "";
     }
 
     @java.lang.Override
@@ -1509,6 +1701,12 @@ public final class ApiSiteLoginProto {
               java.lang.String s = input.readStringRequireUtf8();
 
               siteUserId_ = s;
+              break;
+            }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              siteDeviceId_ = s;
               break;
             }
           }
@@ -1618,6 +1816,48 @@ public final class ApiSiteLoginProto {
       }
     }
 
+    public static final int SITE_DEVICE_ID_FIELD_NUMBER = 3;
+    private volatile java.lang.Object siteDeviceId_;
+    /**
+     * <pre>
+     *返回站点的设备ID
+     * </pre>
+     *
+     * <code>optional string site_device_id = 3;</code>
+     */
+    public java.lang.String getSiteDeviceId() {
+      java.lang.Object ref = siteDeviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        siteDeviceId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     *返回站点的设备ID
+     * </pre>
+     *
+     * <code>optional string site_device_id = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSiteDeviceIdBytes() {
+      java.lang.Object ref = siteDeviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        siteDeviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -1636,6 +1876,9 @@ public final class ApiSiteLoginProto {
       if (!getSiteUserIdBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 2, siteUserId_);
       }
+      if (!getSiteDeviceIdBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, siteDeviceId_);
+      }
     }
 
     public int getSerializedSize() {
@@ -1648,6 +1891,9 @@ public final class ApiSiteLoginProto {
       }
       if (!getSiteUserIdBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, siteUserId_);
+      }
+      if (!getSiteDeviceIdBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, siteDeviceId_);
       }
       memoizedSize = size;
       return size;
@@ -1669,6 +1915,8 @@ public final class ApiSiteLoginProto {
           .equals(other.getUserSessionId());
       result = result && getSiteUserId()
           .equals(other.getSiteUserId());
+      result = result && getSiteDeviceId()
+          .equals(other.getSiteDeviceId());
       return result;
     }
 
@@ -1683,6 +1931,8 @@ public final class ApiSiteLoginProto {
       hash = (53 * hash) + getUserSessionId().hashCode();
       hash = (37 * hash) + SITE_USER_ID_FIELD_NUMBER;
       hash = (53 * hash) + getSiteUserId().hashCode();
+      hash = (37 * hash) + SITE_DEVICE_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getSiteDeviceId().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1805,6 +2055,8 @@ public final class ApiSiteLoginProto {
 
         siteUserId_ = "";
 
+        siteDeviceId_ = "";
+
         return this;
       }
 
@@ -1829,6 +2081,7 @@ public final class ApiSiteLoginProto {
         com.akaxin.proto.site.ApiSiteLoginProto.ApiSiteLoginResponse result = new com.akaxin.proto.site.ApiSiteLoginProto.ApiSiteLoginResponse(this);
         result.userSessionId_ = userSessionId_;
         result.siteUserId_ = siteUserId_;
+        result.siteDeviceId_ = siteDeviceId_;
         onBuilt();
         return result;
       }
@@ -1876,6 +2129,10 @@ public final class ApiSiteLoginProto {
         }
         if (!other.getSiteUserId().isEmpty()) {
           siteUserId_ = other.siteUserId_;
+          onChanged();
+        }
+        if (!other.getSiteDeviceId().isEmpty()) {
+          siteDeviceId_ = other.siteDeviceId_;
           onChanged();
         }
         onChanged();
@@ -2081,6 +2338,95 @@ public final class ApiSiteLoginProto {
         onChanged();
         return this;
       }
+
+      private java.lang.Object siteDeviceId_ = "";
+      /**
+       * <pre>
+       *返回站点的设备ID
+       * </pre>
+       *
+       * <code>optional string site_device_id = 3;</code>
+       */
+      public java.lang.String getSiteDeviceId() {
+        java.lang.Object ref = siteDeviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          siteDeviceId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       *返回站点的设备ID
+       * </pre>
+       *
+       * <code>optional string site_device_id = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSiteDeviceIdBytes() {
+        java.lang.Object ref = siteDeviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          siteDeviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       *返回站点的设备ID
+       * </pre>
+       *
+       * <code>optional string site_device_id = 3;</code>
+       */
+      public Builder setSiteDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        siteDeviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *返回站点的设备ID
+       * </pre>
+       *
+       * <code>optional string site_device_id = 3;</code>
+       */
+      public Builder clearSiteDeviceId() {
+        
+        siteDeviceId_ = getDefaultInstance().getSiteDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *返回站点的设备ID
+       * </pre>
+       *
+       * <code>optional string site_device_id = 3;</code>
+       */
+      public Builder setSiteDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        siteDeviceId_ = value;
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return this;
@@ -2149,17 +2495,18 @@ public final class ApiSiteLoginProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\031site/api_site_login.proto\022\004site\"\267\001\n\023Ap" +
+      "\n\031site/api_site_login.proto\022\004site\"\314\001\n\023Ap" +
       "iSiteLoginRequest\022\024\n\014user_id_pubk\030\001 \001(\t\022" +
-      "\033\n\023user_device_id_pubk\030\002 \001(\t\022\030\n\020user_dev" +
-      "ice_name\030\004 \001(\t\022\022\n\nuser_token\030\005 \001(\t\022\033\n\023us" +
-      "er_id_sign_base64\030\006 \001(\t\022\"\n\032user_device_i" +
-      "d_sign_base64\030\007 \001(\t\"E\n\024ApiSiteLoginRespo" +
-      "nse\022\027\n\017user_session_id\030\001 \001(\t\022\024\n\014site_use" +
-      "r_id\030\002 \001(\t2U\n\023ApiSiteLoginService\022>\n\005log" +
-      "in\022\031.site.ApiSiteLoginRequest\032\032.site.Api" +
-      "SiteLoginResponseB*\n\025com.akaxin.proto.si",
-      "teB\021ApiSiteLoginProtob\006proto3"
+      "\033\n\023user_device_id_pubk\030\002 \001(\t\022\023\n\013phone_to" +
+      "ken\030\003 \001(\t\022\030\n\020user_device_name\030\004 \001(\t\022\022\n\nu" +
+      "ser_token\030\005 \001(\t\022\033\n\023user_id_sign_base64\030\006" +
+      " \001(\t\022\"\n\032user_device_id_sign_base64\030\007 \001(\t" +
+      "\"]\n\024ApiSiteLoginResponse\022\027\n\017user_session" +
+      "_id\030\001 \001(\t\022\024\n\014site_user_id\030\002 \001(\t\022\026\n\016site_" +
+      "device_id\030\003 \001(\t2U\n\023ApiSiteLoginService\022>" +
+      "\n\005login\022\031.site.ApiSiteLoginRequest\032\032.sit",
+      "e.ApiSiteLoginResponseB*\n\025com.akaxin.pro" +
+      "to.siteB\021ApiSiteLoginProtob\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2178,13 +2525,13 @@ public final class ApiSiteLoginProto {
     internal_static_site_ApiSiteLoginRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_site_ApiSiteLoginRequest_descriptor,
-        new java.lang.String[] { "UserIdPubk", "UserDeviceIdPubk", "UserDeviceName", "UserToken", "UserIdSignBase64", "UserDeviceIdSignBase64", });
+        new java.lang.String[] { "UserIdPubk", "UserDeviceIdPubk", "PhoneToken", "UserDeviceName", "UserToken", "UserIdSignBase64", "UserDeviceIdSignBase64", });
     internal_static_site_ApiSiteLoginResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_site_ApiSiteLoginResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_site_ApiSiteLoginResponse_descriptor,
-        new java.lang.String[] { "UserSessionId", "SiteUserId", });
+        new java.lang.String[] { "UserSessionId", "SiteUserId", "SiteDeviceId", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

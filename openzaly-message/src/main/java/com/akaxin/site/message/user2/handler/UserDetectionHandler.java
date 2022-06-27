@@ -15,129 +15,134 @@
  */
 package com.akaxin.site.message.user2.handler;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akaxin.common.channel.ChannelSession;
-import com.akaxin.common.channel.ChannelWriter;
 import com.akaxin.common.command.Command;
-import com.akaxin.common.command.RedisCommand;
-import com.akaxin.common.constant.CommandConst;
-import com.akaxin.proto.client.ImStcMessageProto;
+import com.akaxin.common.logs.LogUtils;
+import com.akaxin.common.utils.StringHelper;
 import com.akaxin.proto.core.CoreProto;
-import com.akaxin.proto.core.CoreProto.MsgType;
 import com.akaxin.proto.core.UserProto;
 import com.akaxin.proto.site.ImCtsMessageProto;
 import com.akaxin.site.message.dao.ImUserFriendDao;
 import com.akaxin.site.message.dao.ImUserProfileDao;
 import com.akaxin.site.storage.bean.SimpleUserBean;
 
-import io.netty.channel.Channel;
-
 /**
  * <pre>
- * 	消息发送之前的检测： 
- * 		1.群是否为存在的群 
- * 		2.如果用户之间不是好友，消息发送不出去
+ * 	U2消息发送之前的检测： 
+ * 		1.支持消息属于代发类型
+ * 		2.发送者和接受者是否为正常状态用户
+ * 		3.如果用户之间不是好友，消息发送不出去
  * </pre>
  * 
  * @author Sam
  * @since 2017.11.02
  */
-public class UserDetectionHandler extends AbstractUserHandler<Command> {
+public class UserDetectionHandler extends AbstractU2Handler<Command> {
 	private static final Logger logger = LoggerFactory.getLogger(UserDetectionHandler.class);
 
 	@Override
-	public boolean handle(Command command) {
-		ChannelSession channelSession = command.getChannelSession();
+	public Boolean handle(Command command) {
 		try {
 			ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest
 					.parseFrom(command.getParams());
-
-			String siteUserId = null;
+			String siteUserId = command.getSiteUserId();
 			String siteFriendId = null;
 			String msgId = null;
 			int type = request.getType().getNumber();
+			command.setMsgType(type);
+
 			switch (type) {
 			case CoreProto.MsgType.TEXT_VALUE:
-				siteUserId = request.getText().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getText().getSiteUserId();
+				}
 				siteFriendId = request.getText().getSiteFriendId();
 				msgId = request.getText().getMsgId();
 				break;
 			case CoreProto.MsgType.SECRET_TEXT_VALUE:
-				siteUserId = request.getSecretText().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getSecretText().getSiteUserId();
+				}
 				siteFriendId = request.getSecretText().getSiteFriendId();
 				msgId = request.getSecretText().getMsgId();
 				break;
 			case CoreProto.MsgType.IMAGE_VALUE:
-				siteUserId = request.getImage().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getImage().getSiteUserId();
+				}
 				siteFriendId = request.getImage().getSiteFriendId();
 				msgId = request.getImage().getMsgId();
 				break;
 			case CoreProto.MsgType.SECRET_IMAGE_VALUE:
-				siteUserId = request.getSecretImage().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getSecretImage().getSiteUserId();
+				}
 				siteFriendId = request.getSecretImage().getSiteFriendId();
 				msgId = request.getSecretImage().getMsgId();
 				break;
 			case CoreProto.MsgType.VOICE_VALUE:
-				siteUserId = request.getVoice().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getVoice().getSiteUserId();
+				}
 				siteFriendId = request.getVoice().getSiteFriendId();
 				msgId = request.getVoice().getMsgId();
 				break;
 			case CoreProto.MsgType.SECRET_VOICE_VALUE:
-				siteUserId = request.getSecretVoice().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getSecretVoice().getSiteUserId();
+				}
 				siteFriendId = request.getSecretVoice().getSiteFriendId();
 				msgId = request.getSecretVoice().getMsgId();
 				break;
 			case CoreProto.MsgType.U2_NOTICE_VALUE:
+				// 通知消息不需要返回response
+				command.setMsgType(type);
+				return true;
+			case CoreProto.MsgType.U2_WEB_VALUE:
+				if (command.isProxy()) {
+					siteUserId = request.getU2Web().getSiteUserId();
+				}
+				siteFriendId = request.getU2Web().getSiteFriendId();
+				command.setProxySiteUserId(siteUserId);
+				command.setSiteFriendId(siteFriendId);
+				return true;
+			case CoreProto.MsgType.U2_WEB_NOTICE_VALUE:
+				if (command.isProxy()) {
+					siteUserId = request.getU2WebNotice().getSiteUserId();
+					siteFriendId = request.getU2WebNotice().getSiteFriendId();
+					command.setProxySiteUserId(siteUserId);
+					command.setSiteFriendId(siteFriendId);
+				}
 				return true;
 			default:
-				break;
+				logger.error("error message type cmd={} request={}", command.toString(), request.toString());
+				return false;
 			}
-
-			command.setSiteUserId(siteUserId);
+			command.setProxySiteUserId(siteUserId);
 			command.setSiteFriendId(siteFriendId);
 
 			if (checkUser(siteUserId, siteFriendId)) {
-				logger.info("siteUserId={} can send message to siteFriendId={}", siteUserId, siteFriendId);
 				return true;
 			} else {
-				logger.warn("user2 are not friend.user:{},friend:{}", siteUserId, siteFriendId);
-				response(channelSession.getChannel(), command, siteUserId, siteFriendId, msgId);
+				logger.warn("users arent friend relation.siteUserId:{},siteFriendId:{}", siteUserId, siteFriendId);
+				int statusValue = -1;// 非好友关系，返回状态值
+				msgStatusResponse(command, msgId, System.currentTimeMillis(), statusValue);
 			}
 
 		} catch (Exception e) {
-			logger.error("UserDetectionHandler error.", e);
+			LogUtils.requestErrorLog(logger, command, this.getClass(), e);
 		}
 		return false;
 	}
 
 	/**
-	 * 如果互相不为好友，则消息发送失败，回执给客户端
-	 */
-	private void response(Channel channel, Command command, String from, String to, String msgId) {
-		logger.info("二者非好友关系，消息发送失败回执 from={} to={}", from, to);
-		CoreProto.MsgStatus status = CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgStatus(-1).build();
-
-		ImStcMessageProto.MsgWithPointer statusMsg = ImStcMessageProto.MsgWithPointer.newBuilder()
-				.setType(MsgType.MSG_STATUS).setStatus(status).build();
-
-		ImStcMessageProto.ImStcMessageRequest request = ImStcMessageProto.ImStcMessageRequest.newBuilder()
-				.addList(statusMsg).build();
-
-		CoreProto.TransportPackageData data = CoreProto.TransportPackageData.newBuilder()
-				.setData(request.toByteString()).build();
-
-		ChannelWriter.writeByDeviceId(command.getDeviceId(),
-				new RedisCommand().add(CommandConst.PROTOCOL_VERSION).add(CommandConst.IM_MSG_TOCLIENT).add(data.toByteArray()));
-	}
-
-	/**
 	 * <pre>
 	 * 检测消息是否可以发送:
-	 * 		1.消息接受者是否为正常用户
-	 * 		2.二者是否为好友关系
+	 * 		1.消息发送者是否为正常用户
+	 * 		2.消息接受者是否为正常用户
+	 * 		3.二者是否为好友关系
 	 * </pre>
 	 * 
 	 * @param siteUserId
@@ -146,21 +151,36 @@ public class UserDetectionHandler extends AbstractUserHandler<Command> {
 	 */
 	private boolean checkUser(String siteUserId, String siteFriendId) {
 		try {
-			SimpleUserBean bean = ImUserProfileDao.getInstance().getSimpleUserProfile(siteFriendId);
-			if (bean != null && StringUtils.isNotEmpty(bean.getUserId())) {
-				if (bean.getUserStatus() != UserProto.UserStatus.NORMAL_VALUE) {
+			// 检测发送者的状态
+			SimpleUserBean userBean = ImUserProfileDao.getInstance().getSimpleUserProfile(siteUserId);
+			if (userBean != null) {
+				if (userBean.getUserStatus() != UserProto.UserStatus.NORMAL_VALUE) {
 					return false;
 				}
 			} else {
 				return false;
 			}
+
+			// 检测接受者的状态
+			SimpleUserBean friendBean = ImUserProfileDao.getInstance().getSimpleUserProfile(siteFriendId);
+			if (friendBean != null) {
+				if (friendBean.getUserStatus() != UserProto.UserStatus.NORMAL_VALUE) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+
+			// 检测是否为好友关系
 			if (!ImUserFriendDao.getInstance().isFriend(siteUserId, siteFriendId)) {
 				return false;
 			}
 			return true;
 		} catch (Exception e) {
-			logger.error("check user error.", e);
+			logger.error(StringHelper.format("check siteUserid={} siteFriendId={} error.", siteUserId, siteFriendId),
+					e);
 		}
 		return false;
 	}
+
 }

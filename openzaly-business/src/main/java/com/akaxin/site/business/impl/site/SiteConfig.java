@@ -15,13 +15,16 @@
  */
 package com.akaxin.site.business.impl.site;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akaxin.common.constant.ConfigConst;
 import com.akaxin.proto.core.ConfigProto;
 import com.akaxin.site.business.constant.GroupConfig;
 import com.akaxin.site.business.dao.SiteConfigDao;
@@ -36,13 +39,14 @@ public class SiteConfig {
 	private static final Logger logger = LoggerFactory.getLogger(SiteConfig.class);
 
 	private static volatile Map<Integer, String> configMap;
+	private static volatile Set<String> siteManagerSet = new HashSet<String>();
 
 	private SiteConfig() {
 	}
 
 	public static Map<Integer, String> getConfigMap() {
 		if (configMap == null) {
-			configMap = SiteConfigDao.getInstance().getSiteConfig();
+			configMap = updateConfig();
 		}
 		return configMap;
 	}
@@ -50,7 +54,15 @@ public class SiteConfig {
 	public static Map<Integer, String> updateConfig() {
 		try {
 			configMap = SiteConfigDao.getInstance().getSiteConfig();
-			logger.info("update site config : {}", configMap);
+			if (configMap != null) {
+				String siteManageUsers = getConfigMap().get(ConfigProto.ConfigKey.SITE_MANAGER_VALUE);
+				if (StringUtils.isNotEmpty(siteManageUsers)) {
+					String[] adminUsers = siteManageUsers.split(",");
+					List<String> managerList = Arrays.asList(adminUsers);
+					siteManagerSet = new HashSet<String>(managerList);
+					logger.info("update new site manage users={}", siteManagerSet);
+				}
+			}
 		} catch (Exception e) {
 			logger.error("update site config error.", e);
 		}
@@ -80,7 +92,7 @@ public class SiteConfig {
 			String value = getConfigMap().get(ConfigProto.ConfigKey.SITE_STATUS_VALUE);
 
 			if (StringUtils.isNumeric(value)) {
-				return ConfigProto.SiteStatus.OPEN_VALUE == Integer.valueOf(value);
+				return ConfigProto.SiteStatusConfig.OPEN_VALUE == Integer.valueOf(value);
 			}
 		}
 		return false;
@@ -95,37 +107,92 @@ public class SiteConfig {
 		return !isOpen();
 	}
 
-	/**
-	 * 获取用户的注册方式，通过后台管理进行修改用户注册方式
-	 * 
-	 * @return
-	 */
-	public static ConfigProto.RegisterWay getRegisterWay() {
-		ConfigProto.RegisterWay regway = null;
+	// 获取是否需要实名配置
+	public static ConfigProto.RealNameConfig getRealNameConfig() {
+		ConfigProto.RealNameConfig realNameConfig = null;
 		if (getConfigMap() != null) {
-			String value = getConfigMap().get(ConfigProto.ConfigKey.REGISTER_WAY_VALUE);
+			String value = getConfigMap().get(ConfigProto.ConfigKey.REALNAME_STATUS_VALUE);
 			if (StringUtils.isNumeric(value)) {
-				regway = ConfigProto.RegisterWay.forNumber(Integer.valueOf(value));
+				realNameConfig = ConfigProto.RealNameConfig.forNumber(Integer.valueOf(value));
 			}
 		}
-		return regway == null ? ConfigProto.RegisterWay.ANONYMOUS : regway;
+		return realNameConfig == null ? ConfigProto.RealNameConfig.REALNAME_NO : realNameConfig;
 	}
 
-	public static String getSiteAdmin() {
+	// 获取邀请码配置
+	public static ConfigProto.InviteCodeConfig getUICConfig() {
+		ConfigProto.InviteCodeConfig uicConfig = null;
 		if (getConfigMap() != null) {
-			return getConfigMap().get(ConfigProto.ConfigKey.SITE_ADMIN_VALUE);
+			String value = getConfigMap().get(ConfigProto.ConfigKey.INVITE_CODE_STATUS_VALUE);
+			if (StringUtils.isNumeric(value)) {
+				uicConfig = ConfigProto.InviteCodeConfig.forNumber(Integer.valueOf(value));
+			}
+		}
+		return uicConfig == null ? ConfigProto.InviteCodeConfig.UIC_NO : uicConfig;
+	}
+
+	public static String getSiteAddress() {
+		if (getConfigMap() != null) {
+			String siteHost = getConfigMap().get(ConfigProto.ConfigKey.SITE_ADDRESS_VALUE);
+			String sitePort = getConfigMap().get(ConfigProto.ConfigKey.SITE_PORT_VALUE);
+			return siteHost + ":" + sitePort;
 		}
 		return null;
 	}
 
+	/**
+	 * 获取超级管理员
+	 * 
+	 * @return
+	 */
+	public static String getSiteSuperAdmin() {
+		if (getConfigMap() != null) {
+			String siteAdmin = getConfigMap().get(ConfigProto.ConfigKey.SITE_ADMIN_VALUE);
+			return siteAdmin;
+		}
+		return null;
+	}
+
+	/**
+	 * 判断是否为超级管理员
+	 * 
+	 * @param siteUserId
+	 * @return
+	 */
+	public static boolean isSiteSuperAdmin(String siteUserId) {
+		if (StringUtils.isNotEmpty(siteUserId)) {
+			return siteUserId.equals(getSiteSuperAdmin());
+		}
+		return false;
+	}
+
+	/**
+	 * 判断是否为普通管理员
+	 * 
+	 * @param siteUserId
+	 * @return
+	 */
+	public static boolean isSiteManager(String siteUserId) {
+		if (isSiteSuperAdmin(siteUserId)) {
+			return true;
+		}
+		if (siteManagerSet != null && StringUtils.isNotEmpty(siteUserId)) {
+			return siteManagerSet.contains(siteUserId);
+		}
+		return false;
+	}
+
+	/**
+	 * 判断是否存在超级管理员
+	 * 
+	 * @return
+	 */
 	public static boolean hasNoAdminUser() {
 		return !hasAdminUser();
 	}
 
 	public static boolean hasAdminUser() {
-		String adminUser = SiteConfig.getSiteAdmin();
-		logger.info("======= site admin user adminUser={} ", adminUser);
-		if (StringUtils.isNotEmpty(adminUser) && !ConfigConst.DEFAULT_SITE_ADMIN.equals(adminUser)) {
+		if (StringUtils.isNotEmpty(getSiteSuperAdmin())) {
 			return true;
 		}
 		return false;
@@ -146,18 +213,30 @@ public class SiteConfig {
 		return GroupConfig.GROUP_MAX_MEMBER_COUNT;
 	}
 
-	public static ConfigProto.U2EncryptionStatus getU2EncryStatus() {
+	public static ConfigProto.U2EncryptionConfig getU2EncryStatusConfig() {
 		try {
 			Map<Integer, String> map = getConfigMap();
 			if (map != null) {
 				String statusNum = map.get(ConfigProto.ConfigKey.U2_ENCRYPTION_STATUS_VALUE);
 				if (StringUtils.isNumeric(statusNum)) {
-					return ConfigProto.U2EncryptionStatus.forNumber(Integer.valueOf(statusNum));
+					return ConfigProto.U2EncryptionConfig.forNumber(Integer.valueOf(statusNum));
 				}
 			}
 		} catch (Exception e) {
 			logger.error("get u2 encry status error", e);
 		}
-		return ConfigProto.U2EncryptionStatus.U2_CLOSE;
+		return ConfigProto.U2EncryptionConfig.U2_CLOSE;
+	}
+
+	public static String getSiteLogo() {
+		try {
+			Map<Integer, String> map = getConfigMap();
+			if (map != null) {
+				return map.get(ConfigProto.ConfigKey.SITE_LOGO_VALUE);
+			}
+		} catch (Exception e) {
+			logger.error("get site logo error", e);
+		}
+		return null;
 	}
 }

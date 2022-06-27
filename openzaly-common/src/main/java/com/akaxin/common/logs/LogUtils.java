@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
-import com.akaxin.common.utils.ServerAddressUtils;
+import com.akaxin.common.command.Command;
+import com.akaxin.common.command.CommandResponse;
+import com.akaxin.common.utils.StringHelper;
 
 /**
  * 封装log，针对网络日志以及数据库操作日志
@@ -28,15 +30,44 @@ import com.akaxin.common.utils.ServerAddressUtils;
  * @since 2018-01-25 16:13:00
  */
 public class LogUtils extends LogCreater {
-	
-	public static void printNetLog(Logger logger, String way, String version, String action, String ec, String em,
-			int contentLen) {
-		logger.info("NET -> way:{} server:{} version={} Action={} ec={} em:{} length:{}[bytes]", way,
-				ServerAddressUtils.getAddressPort(), version, action, ec, em, contentLen);
+
+	public static void requestInfoLog(Logger logger, Command command, String messagePattern, Object... objects) {
+		FormattingTuple format = MessageFormatter.arrayFormat(messagePattern, objects);
+		logger.info("client={} siteUserId={} action={} msg={}", command.getClientIp(), command.getSiteUserId(),
+				command.getAction(), command.toString(), format.getMessage());
+		return;
 	}
 
-	public static void printDBLog(Logger logger, long cost, Object result, String sql) {
-		logger.info("DB -> costTime:{} result:{} sql:{}", cost, result, sql);
+	public static void requestDebugLog(Logger logger, Command command, String requestStr) {
+		logger.debug("client={} siteUserId={} action={} command={} request={}", command.getClientIp(),
+				command.getSiteUserId(), command.getAction(), command.toString(), requestStr);
+	}
+
+	public static void requestErrorLog(Logger logger, Command command, Throwable t) {
+		logger.error(StringHelper.format("client={} siteUserId={} action={} uri={} error", command.getClientIp(),
+				command.getSiteUserId(), command.getAction(), command.getUri()), t);
+	}
+
+	public static void requestErrorLog(Logger logger, Command command, Class<?> clazz, Throwable t) {
+		logger.error(StringHelper.format("client={} siteUserId={} action={} uri={} {} error", command.getClientIp(),
+				command.getSiteUserId(), command.getAction(), command.getUri(), clazz.getClass().getName()), t);
+	}
+
+	public static void requestResultLog(Logger logger, Command command, CommandResponse response) {
+		try {
+			logger.info("client={} clientVersion={} siteUserId={} action={} uri={} cost={}ms result=[{}]",
+					command.getClientIp(), command.getClientVersion(), command.getSiteUserId(), command.getAction(),
+					command.getUri(), System.currentTimeMillis() - command.getStartTime(), response.getErrorCodeInfo());
+		} catch (Exception e) {
+			logger.error(StringHelper.format("request result log error command={} response={}", command, response), e);
+		}
+	}
+
+	public static void dbDebugLog(Logger logger, long startTime, Object result, String sql, Object... objects) {
+		String messagePattern = sql.replace("?", "{}");
+		FormattingTuple format = MessageFormatter.arrayFormat(messagePattern, objects);
+		logger.debug("[openzaly-db] cost:{}ms result:{} sql:{}", System.currentTimeMillis() - startTime, result,
+				format.getMessage());
 	}
 
 	public static void info(org.apache.log4j.Logger logger, String messagePattern, Object object) {
@@ -48,4 +79,5 @@ public class LogUtils extends LogCreater {
 		FormattingTuple format = MessageFormatter.arrayFormat(messagePattern, objects);
 		logger.info(format.getMessage());
 	}
+
 }

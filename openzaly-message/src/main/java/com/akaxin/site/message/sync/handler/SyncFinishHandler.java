@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akaxin.common.command.Command;
+import com.akaxin.common.logs.LogUtils;
 import com.akaxin.proto.site.ImSyncFinishProto;
 import com.akaxin.site.storage.api.IMessageDao;
 import com.akaxin.site.storage.service.MessageDaoService;
@@ -29,36 +30,51 @@ public class SyncFinishHandler extends AbstractSyncHandler<Command> {
 	private static Logger logger = LoggerFactory.getLogger(SyncFinishHandler.class);
 	private IMessageDao syncDao = new MessageDaoService();
 
-	public boolean handle(Command command) {
-		logger.info("this is Im.SyncFinish Handler");
+	public Boolean handle(Command command) {
 		try {
 			ImSyncFinishProto.ImSyncFinishRequest request = ImSyncFinishProto.ImSyncFinishRequest
 					.parseFrom(command.getParams());
-
 			String deviceId = command.getDeviceId();
 			String siteUserId = command.getSiteUserId();
 			long u2Pointer = request.getU2Pointer();
 			Map<String, Long> groupPointer = request.getGroupsPointerMap();
+			LogUtils.requestDebugLog(logger, command, request.toString());
 
-			logger.info("siteUserId={} U2Message syncFinish u2Pointer={}", siteUserId, u2Pointer);
-
-			// 如果客户端上传的游标大于数据库里最大的游标，使用数据库里的最大游标值
+			// 如果客户端上传的游标大于数据库里最大消息的游标，说明客户端上传的游标错误
+			long maxU2MessageId = syncDao.queryMaxU2MessageId(siteUserId);
 			long maxU2Pointer = syncDao.queryMaxU2Pointer(siteUserId);
-			if (u2Pointer > maxU2Pointer) {
+			if (u2Pointer > maxU2MessageId) {
+				u2Pointer = maxU2MessageId;
+			}
+			if (u2Pointer < maxU2Pointer) {
 				u2Pointer = maxU2Pointer;
 			}
+
 			syncDao.updateU2Pointer(siteUserId, deviceId, u2Pointer);
 
-			logger.info("siteUserId={} GroupMessage syncFinish groupPointer={}", siteUserId, groupPointer);
+			logger.debug("siteUserId={} GroupMessage syncFinish groupPointer={}", siteUserId, groupPointer);
 
 			for (Map.Entry<String, Long> gidEntry : groupPointer.entrySet()) {
-				syncDao.updateGroupPointer(gidEntry.getKey(), siteUserId, deviceId, gidEntry.getValue());
+				String siteGroupId = gidEntry.getKey();
+				long groupFinishPointer = gidEntry.getValue();
+
+				long maxGroupMsgPointer = syncDao.queryMaxGroupPointer(siteGroupId);
+				long maxUserGroupPointer = syncDao.queryMaxUserGroupPointer(siteGroupId, siteUserId);
+
+				if (groupFinishPointer > maxGroupMsgPointer) {
+					groupFinishPointer = maxGroupMsgPointer;
+				}
+
+				if (groupFinishPointer < maxUserGroupPointer) {
+					groupFinishPointer = maxUserGroupPointer;
+				}
+
+				syncDao.updateGroupPointer(siteGroupId, siteUserId, deviceId, groupFinishPointer);
 			}
-
+			return true;// 执行成功
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogUtils.requestErrorLog(logger, command, e);
 		}
-
 		return false;
 	}
 

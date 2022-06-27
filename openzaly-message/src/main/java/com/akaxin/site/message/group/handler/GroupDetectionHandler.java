@@ -19,94 +19,145 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akaxin.common.channel.ChannelSession;
-import com.akaxin.common.channel.ChannelWriter;
 import com.akaxin.common.command.Command;
-import com.akaxin.common.command.RedisCommand;
-import com.akaxin.common.constant.CommandConst;
-import com.akaxin.proto.client.ImStcMessageProto;
+import com.akaxin.common.logs.LogUtils;
 import com.akaxin.proto.core.CoreProto;
-import com.akaxin.proto.core.CoreProto.MsgType;
+import com.akaxin.proto.core.UserProto;
 import com.akaxin.proto.site.ImCtsMessageProto;
 import com.akaxin.site.message.dao.ImUserGroupDao;
+import com.akaxin.site.message.dao.ImUserProfileDao;
 import com.akaxin.site.storage.bean.GroupProfileBean;
+import com.akaxin.site.storage.bean.SimpleUserBean;
 
+/**
+ * <pre>
+ * 检测群消息发送，是否满足条件
+ * 	1.群成员
+ * 	2.用户是否被seal up
+ * 	3.群是否存在或群状态
+ * 	4.设置command中必要参数
+ * </pre>
+ * 
+ * @author Sam{@link an.guoyue254@gmail.com}
+ * @since 2018-02-05 11:47:47
+ */
 public class GroupDetectionHandler extends AbstractGroupHandler<Command> {
 	private static final Logger logger = LoggerFactory.getLogger(GroupDetectionHandler.class);
 
-	public boolean handle(Command command) {
-		ChannelSession channelSession = command.getChannelSession();
+	public Boolean handle(Command command) {
 		try {
 			ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest
 					.parseFrom(command.getParams());
-
-			String siteUserId = null;
-			String groupId = null;
-			String gmsgId = null;
 			int type = request.getType().getNumber();
+			command.setMsgType(type);
+
+			String siteUserId = command.getSiteUserId();
+			String siteGroupId = null;
+			String gmsgId = null;
+
 			switch (type) {
 			case CoreProto.MsgType.GROUP_TEXT_VALUE:
-				siteUserId = request.getGroupText().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getGroupText().getSiteUserId();
+				}
 				gmsgId = request.getGroupText().getMsgId();
-				groupId = request.getGroupText().getSiteGroupId();
+				siteGroupId = request.getGroupText().getSiteGroupId();
 			case CoreProto.MsgType.GROUP_SECRET_TEXT_VALUE:
 				break;
 			case CoreProto.MsgType.GROUP_IMAGE_VALUE:
-				siteUserId = request.getGroupImage().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getGroupImage().getSiteUserId();
+				}
 				gmsgId = request.getGroupImage().getMsgId();
-				groupId = request.getGroupImage().getSiteGroupId();
+				siteGroupId = request.getGroupImage().getSiteGroupId();
 				break;
 			case CoreProto.MsgType.GROUP_SECRET_IMAGE_VALUE:
 				break;
 			case CoreProto.MsgType.GROUP_VOICE_VALUE:
-				siteUserId = request.getGroupVoice().getSiteUserId();
+				if (command.isProxy()) {
+					siteUserId = request.getGroupVoice().getSiteUserId();
+				}
 				gmsgId = request.getGroupVoice().getMsgId();
-				groupId = request.getGroupVoice().getSiteGroupId();
+				siteGroupId = request.getGroupVoice().getSiteGroupId();
 				break;
 			case CoreProto.MsgType.GROUP_SECRET_VOICE_VALUE:
 				break;
 			case CoreProto.MsgType.GROUP_NOTICE_VALUE:
+				if (command.isProxy()) {
+					siteUserId = request.getGroupMsgNotice().getSiteUserId();
+				}
+				siteGroupId = request.getGroupMsgNotice().getSiteGroupId();
+				command.setSiteGroupId(siteGroupId);
+				// 系统下发的消息，直接return true；
+				return true;
+			case CoreProto.MsgType.GROUP_WEB_VALUE:
+				if (command.isProxy()) {
+					siteUserId = request.getGroupWeb().getSiteUserId();
+				}
+				siteGroupId = request.getGroupWeb().getSiteGroupId();
+				command.setProxySiteUserId(siteUserId);
+				command.setSiteGroupId(siteGroupId);
+				// 系统下发的消息，直接return true；
+				return true;
+			case CoreProto.MsgType.GROUP_WEB_NOTICE_VALUE:
+				if (command.isProxy()) {
+					siteUserId = request.getGroupWebNotice().getSiteUserId();
+				}
+				siteGroupId = request.getGroupWebNotice().getSiteGroupId();
+				command.setProxySiteUserId(siteUserId);
+				command.setSiteGroupId(siteGroupId);
+				// 系统下发的消息，直接return true；
 				return true;
 			default:
 				break;
 			}
-			command.setSiteGroupId(groupId);
 
-			if (StringUtils.isEmpty(command.getSiteUserId()) || StringUtils.isEmpty(command.getSiteGroupId())) {
+			command.setProxySiteUserId(siteUserId);
+			// 群消息设置siteGroupId
+			command.setSiteGroupId(siteGroupId);
+
+			// check parameters
+			if (StringUtils.isAnyEmpty(siteUserId, siteGroupId)) {
 				return false;
 			}
 
-			if (checkGroupStatus(groupId) && isGroupMember(siteUserId, groupId)) {
+			// check is member of group
+			if (check(siteUserId, siteGroupId)) {
 				return true;
 			} else {
-				logger.info("user is not group member.user:{},group:{}", siteUserId, groupId);
-				response(command, siteUserId, groupId, gmsgId);
+				logger.warn("client={} siteUserId={} is not group={} member", command.getClientIp(), siteUserId,
+						siteGroupId);
+				int statusValue = -2;
+				msgStatusResponse(command, gmsgId, System.currentTimeMillis(), statusValue);
 			}
 
 		} catch (Exception e) {
-			logger.error("group detection error!", e);
+			LogUtils.requestErrorLog(logger, command, GroupDetectionHandler.class, e);
 		}
 
 		return false;
 	}
 
-	private void response(Command command, String from, String to, String msgId) {
-		logger.info("Group detection error response to client:{}", "用户不是群成员，不能发送消息");
-		CoreProto.MsgStatus status = CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgStatus(-2).build();
-
-		ImStcMessageProto.MsgWithPointer statusMsg = ImStcMessageProto.MsgWithPointer.newBuilder()
-				.setType(MsgType.MSG_STATUS).setStatus(status).build();
-
-		ImStcMessageProto.ImStcMessageRequest request = ImStcMessageProto.ImStcMessageRequest.newBuilder()
-				.addList(statusMsg).build();
-
-		CoreProto.TransportPackageData data = CoreProto.TransportPackageData.newBuilder()
-				.setData(request.toByteString()).build();
-
-		ChannelWriter.writeByDeviceId(command.getDeviceId(),
-				new RedisCommand().add(CommandConst.PROTOCOL_VERSION).add(CommandConst.IM_MSG_TOCLIENT).add(data.toByteArray()));
+	private boolean check(String siteUserId, String siteGroupId) {
+		return checkUser(siteUserId) && checkGroupStatus(siteGroupId) && isGroupMember(siteUserId, siteGroupId);
 	}
 
+	// 1.检测用户状态是否正常（被封禁用户）
+	private boolean checkUser(String siteUserId) {
+		// 检测发送者的状态
+		SimpleUserBean userBean = ImUserProfileDao.getInstance().getSimpleUserProfile(siteUserId);
+		if (userBean != null) {
+			if (userBean.getUserStatus() != UserProto.UserStatus.NORMAL_VALUE) {
+				return false;
+			}
+		} else {
+			return false;
+		}
+
+		return true;
+	}
+
+	// 2.检测群状态，是否为被删除群
 	private boolean checkGroupStatus(String groupId) {
 		try {
 			GroupProfileBean bean = ImUserGroupDao.getInstance().getGroupProfile(groupId);
@@ -121,6 +172,7 @@ public class GroupDetectionHandler extends AbstractGroupHandler<Command> {
 		return false;
 	}
 
+	// 3.检测是否为群成员，可以发送群消息
 	private boolean isGroupMember(String siteUserId, String groupId) {
 		return ImUserGroupDao.getInstance().isGroupMember(siteUserId, groupId);
 	}

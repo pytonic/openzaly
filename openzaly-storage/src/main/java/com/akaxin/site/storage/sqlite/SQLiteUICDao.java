@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akaxin.common.logs.LogUtils;
+import com.akaxin.common.utils.StringHelper;
 import com.akaxin.site.storage.bean.UicBean;
 import com.akaxin.site.storage.sqlite.manager.SQLiteJDBCManager;
 import com.akaxin.site.storage.sqlite.sql.SQLConst;
@@ -58,15 +59,57 @@ public class SQLiteUICDao {
 	public boolean addUIC(UicBean bean) throws SQLException {
 		long startTime = System.currentTimeMillis();
 		String sql = "INSERT INTO " + UIC_TABLE + "(uic,status,create_time) VALUES(?,?,?);";
+
 		PreparedStatement preStatement = SQLiteJDBCManager.getConnection().prepareStatement(sql);
 		preStatement.setString(1, bean.getUic());
 		preStatement.setInt(2, bean.getStatus());
-		preStatement.setLong(3, System.currentTimeMillis());
-
+		long currentTime = System.currentTimeMillis();
+		preStatement.setLong(3, currentTime);
 		int result = preStatement.executeUpdate();
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, result, sql + bean.toString());
+
+		LogUtils.dbDebugLog(logger, startTime, result, sql, bean.getUic(), bean.getStatus(), currentTime);
 		return result > 0;
+	}
+
+	/**
+	 * 批量新增UIC
+	 * 
+	 * @param bean
+	 * @param num
+	 * @return
+	 * @throws SQLException
+	 */
+	public boolean batchAddUIC(UicBean bean, int num, int length) throws SQLException {
+		long startTime = System.currentTimeMillis();
+		String sql = "INSERT INTO " + UIC_TABLE + "(uic,status,create_time) VALUES(?,?,?);";
+		int successCount = 0;
+		length = length < 6 ? 6 : length;// 最短6位
+		try {
+			SQLiteJDBCManager.getConnection().setAutoCommit(false);
+			for (int i = 0; i < num; i++) {
+				try {
+					// int uic = (int) ((Math.random() * 9 + 1) * 100000);
+					String uicValue = StringHelper.generateRandomNumber(length);
+					PreparedStatement preStatement = SQLiteJDBCManager.getConnection().prepareStatement(sql);
+					preStatement.setString(1, uicValue);
+					preStatement.setInt(2, bean.getStatus());
+					preStatement.setLong(3, System.currentTimeMillis());
+					preStatement.executeUpdate();
+					successCount++;
+				} catch (Exception e) {
+					logger.error("execute uic sql error ", e);
+				}
+			}
+			SQLiteJDBCManager.getConnection().commit();
+			SQLiteJDBCManager.getConnection().setAutoCommit(true);
+		} catch (Exception e) {
+			SQLiteJDBCManager.getConnection().rollback();
+			logger.error(StringHelper.format("batch add uic error bean={} num={}", bean.toString(), num), e);
+		}
+
+		LogUtils.dbDebugLog(logger, startTime, successCount, sql, "randomUic", bean.getStatus(),
+				System.currentTimeMillis());
+		return successCount > 0;
 	}
 
 	/**
@@ -83,9 +126,7 @@ public class SQLiteUICDao {
 		UicBean bean = null;
 		PreparedStatement preStatement = SQLiteJDBCManager.getConnection().prepareStatement(sql);
 		preStatement.setString(1, uic);
-
 		ResultSet rs = preStatement.executeQuery();
-
 		if (rs.next()) {
 			bean = new UicBean();
 			bean.setUic(rs.getString(1));
@@ -95,9 +136,7 @@ public class SQLiteUICDao {
 			bean.setUseTime(rs.getLong(5));
 		}
 
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, bean, sql + uic);
-
+		LogUtils.dbDebugLog(logger, startTime, bean, sql, uic);
 		return bean;
 	}
 
@@ -111,14 +150,17 @@ public class SQLiteUICDao {
 	public boolean updateUIC(UicBean bean) throws SQLException {
 		long startTime = System.currentTimeMillis();
 		String sql = "UPDATE " + UIC_TABLE + " SET site_user_id=?,status=?,use_time=? WHERE uic=?;";
+
 		PreparedStatement preStatement = SQLiteJDBCManager.getConnection().prepareStatement(sql);
 		preStatement.setString(1, bean.getSiteUserId());
 		preStatement.setInt(2, bean.getStatus());
-		preStatement.setLong(3, System.currentTimeMillis());
+		long currentTime = System.currentTimeMillis();
+		preStatement.setLong(3, currentTime);
 		preStatement.setString(4, bean.getUic());
 		int result = preStatement.executeUpdate();
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, result, sql + bean.toString());
+
+		LogUtils.dbDebugLog(logger, startTime, result, sql, bean.getSiteUserId(), bean.getStatus(), currentTime,
+				bean.getUic());
 		return result > 0;
 	}
 
@@ -128,6 +170,7 @@ public class SQLiteUICDao {
 		String sql = "SELECT a.id,a.uic,a.site_user_id,b.user_name,a.create_time,a.use_time FROM " + UIC_TABLE
 				+ " AS a LEFT JOIN " + USER_PROFILE_TABLE
 				+ " AS b ON a.site_user_id=b.site_user_id where a.status=? LIMIT ?,?;";
+
 		int startNum = (pageNum - 1) * pageSize;
 		PreparedStatement preStatement = SQLiteJDBCManager.getConnection().prepareStatement(sql);
 		preStatement.setInt(1, status);
@@ -144,8 +187,8 @@ public class SQLiteUICDao {
 			bean.setUseTime(rs.getLong(6));
 			uicList.add(bean);
 		}
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, uicList, sql);
+
+		LogUtils.dbDebugLog(logger, startTime, uicList, sql);
 		return uicList;
 	}
 
@@ -162,6 +205,7 @@ public class SQLiteUICDao {
 		List<UicBean> uicList = new ArrayList<UicBean>();
 		String sql = "SELECT a.id,a.uic,a.site_user_id,b.user_name,a.create_time,a.use_time FROM " + UIC_TABLE
 				+ " AS a LEFT JOIN " + USER_PROFILE_TABLE + " AS b ON a.site_user_id=b.site_user_id LIMIT ?,?;";
+
 		int startNum = (pageNum - 1) * pageSize;
 		PreparedStatement preStatement = SQLiteJDBCManager.getConnection().prepareStatement(sql);
 		preStatement.setInt(1, startNum);
@@ -177,8 +221,8 @@ public class SQLiteUICDao {
 			bean.setUseTime(rs.getLong(6));
 			uicList.add(bean);
 		}
-		long endTime = System.currentTimeMillis();
-		LogUtils.printDBLog(logger, endTime - startTime, uicList, sql);
+
+		LogUtils.dbDebugLog(logger, startTime, uicList, sql, startNum, pageSize);
 		return uicList;
 	}
 }

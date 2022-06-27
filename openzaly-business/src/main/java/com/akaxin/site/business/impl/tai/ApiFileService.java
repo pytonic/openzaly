@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.akaxin.common.command.Command;
 import com.akaxin.common.command.CommandResponse;
 import com.akaxin.common.constant.ErrorCode2;
+import com.akaxin.common.logs.LogUtils;
 import com.akaxin.proto.core.FileProto;
 import com.akaxin.proto.site.ApiFileDownloadProto;
 import com.akaxin.proto.site.ApiFileUploadProto;
@@ -46,20 +47,20 @@ public class ApiFileService extends AbstractRequest {
 			ApiFileUploadProto.ApiFileUploadRequest request = ApiFileUploadProto.ApiFileUploadRequest
 					.parseFrom(command.getParams());
 			FileProto.File file = request.getFile();
-			int type = file.getFileTypeValue();
+			FileProto.FileDesc fileDesc = request.getFileDesc();
+			FileProto.FileType fileType = file.getFileType();
 			byte[] content = file.getFileContent().toByteArray();
-			logger.info("api.file.upload command={} type={} content={}", command.toString(), type, content.length);
+			LogUtils.requestDebugLog(logger, command, request.toString());
 
-			String fileId = FileServerUtils.saveFile(content, FilePathUtils.getPicPath(), type);
+			String fileId = FileServerUtils.saveFile(content, FilePathUtils.getPicPath(), fileType, fileDesc);
 			ApiFileUploadProto.ApiFileUploadResponse response = ApiFileUploadProto.ApiFileUploadResponse.newBuilder()
 					.setFileId(fileId).build();
 			commandResponse.setParams(response.toByteArray());
 			errCode = ErrorCode2.SUCCESS;
 		} catch (Exception e) {
 			errCode = ErrorCode2.ERROR_SYSTEMERROR;
-			logger.error("upload file error.", e);
+			LogUtils.requestErrorLog(logger, command, e);
 		}
-		logger.info("api.file.upload result={}", errCode.toString());
 		return commandResponse.setErrCode2(errCode);
 	}
 
@@ -69,27 +70,38 @@ public class ApiFileService extends AbstractRequest {
 		try {
 			ApiFileDownloadProto.ApiFileDownloadRequest request = ApiFileDownloadProto.ApiFileDownloadRequest
 					.parseFrom(command.getParams());
-			String fileId = request.getFileId();
-			logger.info("api.file.download request={}", request.toString());
-			if (StringUtils.isNotBlank(fileId)) {
+			// String fileId = request.getFileId();
+			String reqFileId = request.getFileId();
+			LogUtils.requestDebugLog(logger, command, request.toString());
+
+			if (StringUtils.isNotBlank(reqFileId) && !"null".equals(reqFileId)) {
+				String fileId = reqFileId;
+				if (fileId.startsWith("AKX-") || fileId.startsWith("akx-")) {
+					fileId = fileId.substring(4, fileId.length());
+				}
+
 				byte[] imageBytes = FileServerUtils.fileToBinary(FilePathUtils.getPicPath(), fileId);
 
-				FileProto.File file = FileProto.File.newBuilder().setFileId(fileId)
-						.setFileContent(ByteString.copyFrom(imageBytes)).build();
+				if (imageBytes != null && imageBytes.length > 0) {
+					FileProto.File file = FileProto.File.newBuilder().setFileId(reqFileId)
+							.setFileContent(ByteString.copyFrom(imageBytes)).build();
 
-				ApiFileDownloadProto.ApiFileDownloadResponse response = ApiFileDownloadProto.ApiFileDownloadResponse
-						.newBuilder().setFile(file).build();
+					ApiFileDownloadProto.ApiFileDownloadResponse response = ApiFileDownloadProto.ApiFileDownloadResponse
+							.newBuilder().setFile(file).build();
 
-				commandResponse.setParams(response.toByteArray());
-				errCode = ErrorCode2.SUCCESS;
+					commandResponse.setParams(response.toByteArray());
+					errCode = ErrorCode2.SUCCESS;
+				} else {
+					// 获取文件资源失败，文件可能不存在，此时需要抛出异常
+					errCode = ErrorCode2.ERROR2_FILE_DOWNLOAD;
+				}
 			} else {
 				errCode = ErrorCode2.ERROR_PARAMETER;
 			}
 		} catch (Exception e) {
 			errCode = ErrorCode2.ERROR_SYSTEMERROR;
-			logger.error("download file error.", e);
+			LogUtils.requestErrorLog(logger, command, e);
 		}
-		logger.info("api.file.download result={}", errCode.toString());
 		return commandResponse.setErrCode2(errCode);
 	}
 

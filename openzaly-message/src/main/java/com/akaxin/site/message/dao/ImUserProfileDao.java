@@ -67,10 +67,19 @@ public class ImUserProfileDao {
 
 	public String getGlobalUserId(String siteUserId) {
 		try {
-			return userProfileDao.getGlobalUserId(siteUserId);
+			return userProfileDao.getGlobalUserIdBySiteUserId(siteUserId);
 		} catch (SQLException e) {
 			logger.error("get user token error.", e);
 		}
 		return null;
+	}
+
+	public boolean isMute(String siteUserId) throws SQLException {
+		try {
+			return userProfileDao.isMute(siteUserId);
+		} catch (Exception e) {
+			logger.error("get user mute error", e);
+		}
+		return true;
 	}
 }

@@ -29,11 +29,18 @@ import com.akaxin.site.storage.service.MessageDaoService;
 
 import io.netty.channel.Channel;
 
+/**
+ * 群加密图片消息（暂不支持）
+ * 
+ * @author Sam{@link an.guoyue254@gmail.com}
+ * @since 2018-04-26 15:12:59
+ */
+@Deprecated
 public class GroupMessageImageSecretHandler extends AbstractGroupHandler<Command> {
 
 	private IMessageDao messageDao = new MessageDaoService();
 
-	public boolean handle(Command command) {
+	public Boolean handle(Command command) {
 		ChannelSession channelSession = command.getChannelSession();
 
 		try {
@@ -56,11 +63,13 @@ public class GroupMessageImageSecretHandler extends AbstractGroupHandler<Command
 				System.out.println(
 						"GroupMsg = id=" + gmsg_id + "," + siteUserId + "," + group_id + "," + group_text + ",");
 
+				long msgTime = System.currentTimeMillis();
 				GroupMessageBean gmsgBean = new GroupMessageBean();
 				gmsgBean.setSendDeviceId(deviceId);
+				gmsgBean.setMsgTime(msgTime);
 				messageDao.saveGroupMessage(gmsgBean);
 
-				msgResponse(channelSession.getChannel(), command, siteUserId, group_id, gmsg_id);
+				msgResponse(channelSession.getChannel(), command, siteUserId, group_id, gmsg_id, msgTime);
 
 				return true;
 			}
@@ -72,8 +81,9 @@ public class GroupMessageImageSecretHandler extends AbstractGroupHandler<Command
 		return false;
 	}
 
-	private void msgResponse(Channel channel, Command command, String from, String to, String msgId) {
-		CoreProto.MsgStatus status = CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgStatus(1).build();
+	private void msgResponse(Channel channel, Command command, String from, String to, String msgId, long msgTime) {
+		CoreProto.MsgStatus status = CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgServerTime(msgTime)
+				.setMsgStatus(1).build();
 
 		ImStcMessageProto.MsgWithPointer statusMsg = ImStcMessageProto.MsgWithPointer.newBuilder()
 				.setType(MsgType.MSG_STATUS).setStatus(status).build();

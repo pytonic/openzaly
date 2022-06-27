@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.akaxin.common.constant.ErrorCode2;
+import com.akaxin.common.constant.IErrorCode;
 
 /**
  * 
@@ -79,6 +80,12 @@ public class CommandResponse {
 		return this;
 	}
 
+	public CommandResponse setErrCode(IErrorCode errCode) {
+		this.errCode = errCode.getCode();
+		this.errInfo = errCode.getInfo();
+		return this;
+	}
+
 	public CommandResponse setErrCode2(ErrorCode2 errCode2) {
 		this.errCode = errCode2.getCode();
 		this.errInfo = errCode2.getInfo();
@@ -92,6 +99,10 @@ public class CommandResponse {
 	public CommandResponse setErrInfo(String errInfo) {
 		this.errInfo = errInfo;
 		return this;
+	}
+
+	public String getErrorCodeInfo() {
+		return "errCode=" + this.errCode + ",errInfo=" + this.errInfo;
 	}
 
 	public String toString() {

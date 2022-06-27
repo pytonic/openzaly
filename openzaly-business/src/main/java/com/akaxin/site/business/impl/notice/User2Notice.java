@@ -15,32 +15,26 @@
  */
 package com.akaxin.site.business.impl.notice;
 
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akaxin.common.channel.ChannelWriter;
 import com.akaxin.common.command.Command;
-import com.akaxin.common.command.CommandResponse;
-import com.akaxin.common.constant.CommandConst;
-import com.akaxin.common.constant.ErrorCode;
 import com.akaxin.common.constant.RequestAction;
+import com.akaxin.common.utils.StringHelper;
 import com.akaxin.proto.client.ImStcNoticeProto;
 import com.akaxin.proto.core.CoreProto;
+import com.akaxin.proto.core.CoreProto.MsgType;
 import com.akaxin.proto.site.ImCtsMessageProto;
 import com.akaxin.site.business.constant.NoticeText;
-import com.akaxin.site.business.dao.UserProfileDao;
-import com.akaxin.site.business.dao.UserSessionDao;
 import com.akaxin.site.message.api.IMessageService;
 import com.akaxin.site.message.service.ImMessageService;
-import com.akaxin.site.storage.bean.SimpleUserBean;
+import com.akaxin.site.storage.bean.ApplyFriendBean;
 import com.google.protobuf.ByteString;
 
 public class User2Notice {
 	private static final Logger logger = LoggerFactory.getLogger(User2Notice.class);
-	private IMessageService u2MsgService = new ImMessageService();
+	private IMessageService imService = new ImMessageService();
 
 	/**
 	 * A用户添加用户B为好友，发送B有好友添加的申请 <br>
@@ -50,69 +44,95 @@ public class User2Notice {
 	 * @param siteUserId
 	 *            用户B的用户ID
 	 */
-	public void applyFriendNotice(String siteUserId) {
-		List<String> deviceList = UserSessionDao.getInstance().getSessionDevices(siteUserId);
-		for (String deviceId : deviceList) {
-			CommandResponse commandResponse = new CommandResponse().setVersion(CommandConst.PROTOCOL_VERSION)
-					.setAction(CommandConst.IM_NOTICE);
+	public void applyFriendNotice(String siteUserId, String siteFriendId) {
+		try {
+			Command command = new Command();
+			command.setSiteUserId(siteUserId);
+			command.setSiteFriendId(siteFriendId);
+			command.setAction(RequestAction.IM_STC_NOTICE.getName());
 			ImStcNoticeProto.ImStcNoticeRequest noticeRequest = ImStcNoticeProto.ImStcNoticeRequest.newBuilder()
 					.setType(ImStcNoticeProto.NoticeType.APPLY_FRIEND).build();
-			commandResponse.setParams(noticeRequest.toByteArray());
-			commandResponse.setErrCode(ErrorCode.SUCCESS);
-			ChannelWriter.writeByDeviceId(deviceId, commandResponse);
-			logger.info("apply friend notice. to siteUserId={} deviceId={}", siteUserId, deviceId);
+			command.setParams(noticeRequest.toByteArray());
+			// 发送im.stc.notice消息
+			boolean result = imService.execute(command);
+			logger.debug("siteUserId={} apply friend notice friendId={} result={}", siteUserId, siteFriendId, result);
+		} catch (Exception e) {
+			logger.error("send apply friend notice error", e);
 		}
 	}
 
 	/**
-	 * A同意B的好友添加之后，A&&B分别收到对方已互为好友的消息
+	 * <pre>
+	 * 代发一条U2本文消息 
+	 * AB成为好友，同时发送A/B一条消息
+	 * </pre>
 	 * 
 	 * @param siteUserId
+	 *            接受请求方
 	 * @param siteFriendId
+	 *            发送请求方，注意二者的关系
 	 */
-	public void firstFriendMessageNotice(String siteUserId, String siteFriendId) {
+	public void addFriendTextMessage(ApplyFriendBean bean) {
 		try {
-			SimpleUserBean userBean = UserProfileDao.getInstance().getSimpleProfileById(siteUserId);
-			String siteUserText = StringUtils.isEmpty(userBean.getUserName()) ? siteUserId
-					: userBean.getUserName() + NoticeText.USER_ADD_FRIEND;
-			CoreProto.U2MsgNotice msgNotice = CoreProto.U2MsgNotice.newBuilder().setSiteUserId(siteUserId)
-					.setSiteFriendId(siteFriendId).setText(ByteString.copyFromUtf8(siteUserText))
-					.setTime(System.currentTimeMillis()).build();
+			// 给“发送请求方”下发的文本消息
+			CoreProto.MsgText textMsg = CoreProto.MsgText.newBuilder().setMsgId(buildU2MsgId(bean.getSiteUserId()))
+					.setSiteUserId(bean.getSiteUserId()).setSiteFriendId(bean.getSiteFriendId())
+					.setText(ByteString.copyFromUtf8(NoticeText.USER_ADD_FRIEND)).setTime(System.currentTimeMillis())
+					.build();
 			ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest.newBuilder()
-					.setU2MsgNotice(msgNotice).setType(CoreProto.MsgType.U2_NOTICE).build();
+					.setType(MsgType.TEXT).setText(textMsg).build();
 
 			Command command = new Command();
 			command.setAction(RequestAction.IM_CTS_MESSAGE.getName());
-			command.setSiteUserId(siteUserId);
-			command.setSiteFriendId(siteFriendId);
+			command.setSiteUserId(bean.getSiteUserId());
+			command.setSiteFriendId(bean.getSiteFriendId());
 			command.setParams(request.toByteArray());
 
-			boolean result = u2MsgService.execute(command);
-			logger.info("first friend message siteUserId={} text={} result={}", siteUserId, siteUserText, result);
+			boolean result = imService.execute(command);
+			logger.debug("add friend Text message siteUserId={} siteFriendId={} result={}", bean.getSiteUserId(),
+					bean.getSiteFriendId(), result);
 		} catch (Exception e) {
-			logger.error("first friend message error. siteUserId=" + siteUserId, e);
+			logger.error(StringHelper.format("send add friend text message error. bean={}", bean), e);
 		}
 
 		try {
-			SimpleUserBean friendBean = UserProfileDao.getInstance().getSimpleProfileById(siteFriendId);
-			String siteFriendText = StringUtils.isEmpty(friendBean.getUserName()) ? siteFriendId
-					: friendBean.getUserName() + NoticeText.USER_ADD_FRIEND;
-			CoreProto.U2MsgNotice msgNotice = CoreProto.U2MsgNotice.newBuilder().setSiteUserId(siteFriendId)
-					.setSiteFriendId(siteUserId).setText(ByteString.copyFromUtf8(siteFriendText))
-					.setTime(System.currentTimeMillis()).build();
+			// 给“接受请求方”下发消息，文案使用“发送请求方”方添加好友时候使用的文案eg：“我是章三，添加你为好友”
+			String applyText = "我添加了你为好友";// 默认文案
+			long applyTime = System.currentTimeMillis();
+			if (StringUtils.isNotEmpty(bean.getApplyInfo())) {
+				applyText = bean.getApplyInfo();
+			}
+			if (bean.getApplyTime() > 0) {
+				applyTime = bean.getApplyTime();
+			}
+			CoreProto.MsgText textMsg = CoreProto.MsgText.newBuilder().setMsgId(buildU2MsgId(bean.getSiteFriendId()))
+					.setSiteUserId(bean.getSiteFriendId()).setSiteFriendId(bean.getSiteUserId())
+					.setText(ByteString.copyFromUtf8(applyText)).setTime(applyTime).build();
 			ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest.newBuilder()
-					.setU2MsgNotice(msgNotice).setType(CoreProto.MsgType.U2_NOTICE).build();
+					.setType(MsgType.TEXT).setText(textMsg).build();
 
 			Command command = new Command();
 			command.setAction(RequestAction.IM_CTS_MESSAGE.getName());
-			command.setSiteUserId(siteFriendId);
-			command.setSiteFriendId(siteUserId);
+			command.setSiteUserId(bean.getSiteFriendId());
+			command.setSiteFriendId(bean.getSiteUserId());
 			command.setParams(request.toByteArray());
 
-			boolean result = u2MsgService.execute(command);
-			logger.info("first friend message siteFriendId={} text={} result={}", siteFriendId, siteFriendText, result);
+			boolean result = imService.execute(command);
+			logger.debug("add friend Text message siteUserId={} siteFriendId={} result={}", bean.getSiteFriendId(),
+					bean.getSiteUserId(), result);
 		} catch (Exception e) {
-			logger.error("first friend message error.siteFriend=" + siteFriendId, e);
+			logger.error(StringHelper.format("send add friend text message error. bean={}", bean), e);
 		}
+	}
+
+	private String buildU2MsgId(String siteUserid) {
+		StringBuilder sb = new StringBuilder("U2-");
+		if (StringUtils.isNotEmpty(siteUserid)) {
+			int len = siteUserid.length();
+			sb.append(siteUserid.substring(0, len >= 8 ? 8 : len));
+			sb.append("-");
+		}
+		sb.append(System.currentTimeMillis());
+		return sb.toString();
 	}
 }

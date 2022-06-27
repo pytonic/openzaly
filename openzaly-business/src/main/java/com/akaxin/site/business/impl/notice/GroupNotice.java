@@ -17,6 +17,7 @@ package com.akaxin.site.business.impl.notice;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,11 +33,10 @@ import com.akaxin.site.storage.bean.SimpleUserBean;
 import com.google.protobuf.ByteString;
 
 /**
- * 主要发送群主相关的消息通知
- * 
  * <pre>
+ * 主要发送群主相关的消息通知 
  * 	1.新用户加入了群聊消息提醒
- * 	2.
+ * 	2.消息通知，以及系统通知
  * </pre>
  * 
  * @author Sam{@link an.guoyue254@gmail.com}
@@ -45,26 +45,44 @@ import com.google.protobuf.ByteString;
 public class GroupNotice {
 	private static final Logger logger = LoggerFactory.getLogger(GroupNotice.class);
 
-	private IMessageService groupMsgService = new ImMessageService();
+	private IMessageService imService = new ImMessageService();
 
 	/**
 	 * 新用户加入了群聊 <br>
 	 * eg：群聊天界面中，<张三 加入了群聊天>
 	 */
-	public void userAddGroupNotice(String siteUserId, String groupId, List<String> userIdList) {
-		String noticeText = "";
+	public void addGroupMemberNotice(String siteUserId, String groupId, List<String> userIdList) {
+		logger.info("add group member notice siteUserId={} groupId={} userList={}", siteUserId, groupId, userIdList);
+
+		if (StringUtils.isAnyEmpty(siteUserId, groupId) || userIdList == null || userIdList.size() == 0) {
+			return;
+		}
+
+		StringBuilder noticeText = new StringBuilder();
 		try {
-			if (userIdList != null) {
-				for (String userId : userIdList) {
-					SimpleUserBean bean = UserProfileDao.getInstance().getSimpleProfileById(userId);
-					String userName = bean.getUserName();
-					noticeText += userName + ",";
+			// 移除群主,群创建者
+			userIdList.remove(siteUserId);
+			// 查询群主信息
+			SimpleUserBean bean = UserProfileDao.getInstance().getSimpleProfileById(siteUserId);
+			if (bean != null && StringUtils.isNotEmpty(bean.getUserName())) {
+				noticeText.append(bean.getUserName());
+				noticeText.append(" 邀请了 ");
+			}
+
+			int num = 0;
+			for (String userId : userIdList) {
+				SimpleUserBean memberBean = UserProfileDao.getInstance().getSimpleProfileById(userId);
+				if (memberBean != null && StringUtils.isNotEmpty(memberBean.getUserName())) {
+					noticeText.append(memberBean.getUserName());
+					if (num++ < (userIdList.size() - 1)) {
+						noticeText.append(",");
+					}
 				}
 			}
-			noticeText = noticeText + NoticeText.USER_ADD_GROUP;
-			this.groupMsgNotice(siteUserId, groupId, noticeText);
+			noticeText.append(NoticeText.USER_ADD_GROUP);
+			this.groupMsgNotice(siteUserId, groupId, noticeText.toString());
 		} catch (Exception e) {
-			logger.error("new group member notice error. notice=" + noticeText, e);
+			logger.error("new group member notice error. notice=" + noticeText.toString(), e);
 		}
 	}
 
@@ -78,9 +96,9 @@ public class GroupNotice {
 	 * 
 	 */
 	private void groupMsgNotice(String siteUserId, String siteGroupId, String noticeText) {
-		logger.info("group msg notice siteUserId={},siteGroupId={},text={}", siteUserId, siteGroupId, noticeText);
-		CoreProto.GroupMsgNotice groupMsgNotice = CoreProto.GroupMsgNotice.newBuilder().setSiteGroupId(siteGroupId)
-				.setText(ByteString.copyFromUtf8(noticeText)).build();
+		CoreProto.GroupMsgNotice groupMsgNotice = CoreProto.GroupMsgNotice.newBuilder()
+				.setMsgId(buildGroupMsgId(siteUserId)).setSiteUserId(siteUserId).setSiteGroupId(siteGroupId)
+				.setText(ByteString.copyFromUtf8(noticeText)).setTime(System.currentTimeMillis()).build();
 		ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest.newBuilder()
 				.setType(CoreProto.MsgType.GROUP_NOTICE).setGroupMsgNotice(groupMsgNotice).build();
 		Command command = new Command();
@@ -88,8 +106,18 @@ public class GroupNotice {
 		command.setSiteUserId(siteUserId);
 		command.setSiteGroupId(siteGroupId);
 		command.setParams(request.toByteArray());
-		logger.info("group msg notice command={}", command.toString());
-		groupMsgService.execute(command);
+		logger.debug("group msg notice command={}", command.toString());
+		imService.execute(command);
 	}
 
+	private String buildGroupMsgId(String siteUserid) {
+		StringBuilder sb = new StringBuilder("GROUP-");
+		if (StringUtils.isNotEmpty(siteUserid)) {
+			int len = siteUserid.length();
+			sb.append(siteUserid.substring(0, len >= 8 ? 8 : len));
+			sb.append("-");
+		}
+		sb.append(System.currentTimeMillis());
+		return sb.toString();
+	}
 }

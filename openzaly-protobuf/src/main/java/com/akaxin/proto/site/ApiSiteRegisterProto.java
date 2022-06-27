@@ -125,6 +125,24 @@ public final class ApiSiteRegisterProto {
      */
     com.google.protobuf.ByteString
         getPhoneTokenBytes();
+
+    /**
+     * <pre>
+     *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+     * </pre>
+     *
+     * <code>optional string site_login_id = 7;</code>
+     */
+    java.lang.String getSiteLoginId();
+    /**
+     * <pre>
+     *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+     * </pre>
+     *
+     * <code>optional string site_login_id = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getSiteLoginIdBytes();
   }
   /**
    * Protobuf type {@code site.ApiSiteRegisterRequest}
@@ -144,6 +162,7 @@ public final class ApiSiteRegisterProto {
       userUic_ = "";
       applyInfo_ = "";
       phoneToken_ = "";
+      siteLoginId_ = "";
     }
 
     @java.lang.Override
@@ -205,6 +224,12 @@ public final class ApiSiteRegisterProto {
               java.lang.String s = input.readStringRequireUtf8();
 
               phoneToken_ = s;
+              break;
+            }
+            case 58: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              siteLoginId_ = s;
               break;
             }
           }
@@ -482,6 +507,48 @@ public final class ApiSiteRegisterProto {
       }
     }
 
+    public static final int SITE_LOGIN_ID_FIELD_NUMBER = 7;
+    private volatile java.lang.Object siteLoginId_;
+    /**
+     * <pre>
+     *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+     * </pre>
+     *
+     * <code>optional string site_login_id = 7;</code>
+     */
+    public java.lang.String getSiteLoginId() {
+      java.lang.Object ref = siteLoginId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        siteLoginId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+     * </pre>
+     *
+     * <code>optional string site_login_id = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getSiteLoginIdBytes() {
+      java.lang.Object ref = siteLoginId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        siteLoginId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -512,6 +579,9 @@ public final class ApiSiteRegisterProto {
       if (!getPhoneTokenBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 6, phoneToken_);
       }
+      if (!getSiteLoginIdBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 7, siteLoginId_);
+      }
     }
 
     public int getSerializedSize() {
@@ -536,6 +606,9 @@ public final class ApiSiteRegisterProto {
       }
       if (!getPhoneTokenBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, phoneToken_);
+      }
+      if (!getSiteLoginIdBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, siteLoginId_);
       }
       memoizedSize = size;
       return size;
@@ -565,6 +638,8 @@ public final class ApiSiteRegisterProto {
           .equals(other.getApplyInfo());
       result = result && getPhoneToken()
           .equals(other.getPhoneToken());
+      result = result && getSiteLoginId()
+          .equals(other.getSiteLoginId());
       return result;
     }
 
@@ -587,6 +662,8 @@ public final class ApiSiteRegisterProto {
       hash = (53 * hash) + getApplyInfo().hashCode();
       hash = (37 * hash) + PHONE_TOKEN_FIELD_NUMBER;
       hash = (53 * hash) + getPhoneToken().hashCode();
+      hash = (37 * hash) + SITE_LOGIN_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getSiteLoginId().hashCode();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -717,6 +794,8 @@ public final class ApiSiteRegisterProto {
 
         phoneToken_ = "";
 
+        siteLoginId_ = "";
+
         return this;
       }
 
@@ -745,6 +824,7 @@ public final class ApiSiteRegisterProto {
         result.userUic_ = userUic_;
         result.applyInfo_ = applyInfo_;
         result.phoneToken_ = phoneToken_;
+        result.siteLoginId_ = siteLoginId_;
         onBuilt();
         return result;
       }
@@ -808,6 +888,10 @@ public final class ApiSiteRegisterProto {
         }
         if (!other.getPhoneToken().isEmpty()) {
           phoneToken_ = other.phoneToken_;
+          onChanged();
+        }
+        if (!other.getSiteLoginId().isEmpty()) {
+          siteLoginId_ = other.siteLoginId_;
           onChanged();
         }
         onChanged();
@@ -1366,6 +1450,95 @@ public final class ApiSiteRegisterProto {
   checkByteStringIsUtf8(value);
         
         phoneToken_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object siteLoginId_ = "";
+      /**
+       * <pre>
+       *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+       * </pre>
+       *
+       * <code>optional string site_login_id = 7;</code>
+       */
+      public java.lang.String getSiteLoginId() {
+        java.lang.Object ref = siteLoginId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          siteLoginId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+       * </pre>
+       *
+       * <code>optional string site_login_id = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getSiteLoginIdBytes() {
+        java.lang.Object ref = siteLoginId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          siteLoginId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+       * </pre>
+       *
+       * <code>optional string site_login_id = 7;</code>
+       */
+      public Builder setSiteLoginId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        siteLoginId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+       * </pre>
+       *
+       * <code>optional string site_login_id = 7;</code>
+       */
+      public Builder clearSiteLoginId() {
+        
+        siteLoginId_ = getDefaultInstance().getSiteLoginId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *登陆用户账号（只允许字符串开头，数字组成6～20位）（选填）
+       * </pre>
+       *
+       * <code>optional string site_login_id = 7;</code>
+       */
+      public Builder setSiteLoginIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        siteLoginId_ = value;
         onChanged();
         return this;
       }
@@ -1976,16 +2149,17 @@ public final class ApiSiteRegisterProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\034site/api_site_register.proto\022\004site\"\220\001\n" +
+      "\n\034site/api_site_register.proto\022\004site\"\247\001\n" +
       "\026ApiSiteRegisterRequest\022\024\n\014user_id_pubk\030" +
       "\001 \001(\t\022\021\n\tuser_name\030\002 \001(\t\022\022\n\nuser_photo\030\003" +
       " \001(\t\022\020\n\010user_uic\030\004 \001(\t\022\022\n\napply_info\030\005 \001" +
-      "(\t\022\023\n\013phone_token\030\006 \001(\t\"/\n\027ApiSiteRegist" +
-      "erResponse\022\024\n\014site_user_id\030\001 \001(\t2a\n\026ApiS" +
-      "iteRegisterService\022G\n\010register\022\034.site.Ap" +
-      "iSiteRegisterRequest\032\035.site.ApiSiteRegis" +
-      "terResponseB-\n\025com.akaxin.proto.siteB\024Ap" +
-      "iSiteRegisterProtob\006proto3"
+      "(\t\022\023\n\013phone_token\030\006 \001(\t\022\025\n\rsite_login_id" +
+      "\030\007 \001(\t\"/\n\027ApiSiteRegisterResponse\022\024\n\014sit" +
+      "e_user_id\030\001 \001(\t2a\n\026ApiSiteRegisterServic" +
+      "e\022G\n\010register\022\034.site.ApiSiteRegisterRequ" +
+      "est\032\035.site.ApiSiteRegisterResponseB-\n\025co" +
+      "m.akaxin.proto.siteB\024ApiSiteRegisterProt",
+      "ob\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2004,7 +2178,7 @@ public final class ApiSiteRegisterProto {
     internal_static_site_ApiSiteRegisterRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_site_ApiSiteRegisterRequest_descriptor,
-        new java.lang.String[] { "UserIdPubk", "UserName", "UserPhoto", "UserUic", "ApplyInfo", "PhoneToken", });
+        new java.lang.String[] { "UserIdPubk", "UserName", "UserPhoto", "UserUic", "ApplyInfo", "PhoneToken", "SiteLoginId", });
     internal_static_site_ApiSiteRegisterResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_site_ApiSiteRegisterResponse_fieldAccessorTable = new

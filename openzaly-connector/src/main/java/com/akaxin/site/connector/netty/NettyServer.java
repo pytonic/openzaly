@@ -21,10 +21,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.akaxin.common.command.Command;
+import com.akaxin.common.command.CommandResponse;
 import com.akaxin.common.executor.AbstracteExecutor;
 import com.akaxin.common.executor.SimpleExecutor;
 import com.akaxin.site.connector.codec.protocol.MessageDecoder;
 import com.akaxin.site.connector.codec.protocol.MessageEncoder;
+import com.akaxin.site.connector.constant.AkxProject;
+import com.akaxin.site.connector.exception.TcpServerException;
 import com.akaxin.site.connector.netty.handler.NettyServerHandler;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -52,7 +55,7 @@ import io.netty.util.concurrent.GenericFutureListener;
  */
 public abstract class NettyServer {
 	private static final Logger logger = LoggerFactory.getLogger(NettyServer.class);
-	private AbstracteExecutor<Command> executor;
+	private AbstracteExecutor<Command, CommandResponse> executor;
 	private ServerBootstrap bootstrap;
 	private EventLoopGroup parentGroup;
 	private EventLoopGroup childGroup;
@@ -61,10 +64,12 @@ public abstract class NettyServer {
 		try {
 			bootstrap = new ServerBootstrap();
 			int needThreadNum = Runtime.getRuntime().availableProcessors() + 1;
+			int parentNum = 10;// accept from channel socket
+			int childNum = needThreadNum * 5 + 10;// give to business handler
 			// 处理服务端事件组
-			parentGroup = new NioEventLoopGroup(needThreadNum * 5, new PrefixThreadFactory("bim-boss-evenloopgroup"));
+			parentGroup = new NioEventLoopGroup(parentNum, new PrefixThreadFactory("bim-boss-evenloopgroup"));
 			// 处理客户端连接请求的事件组
-			childGroup = new NioEventLoopGroup(needThreadNum, new PrefixThreadFactory("bim-worker-evenloopgroup"));
+			childGroup = new NioEventLoopGroup(childNum, new PrefixThreadFactory("bim-worker-evenloopgroup"));
 			// 用户处理所有的channel
 			bootstrap.group(parentGroup, childGroup);
 			bootstrap.channel(NioServerSocketChannel.class);
@@ -109,36 +114,33 @@ public abstract class NettyServer {
 			 */
 			bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, AdaptiveRecvByteBufAllocator.DEFAULT);
 			// the ChannelHandler to use for serving the requests.
-			bootstrap.handler(new LoggingHandler(LogLevel.INFO));
+			bootstrap.handler(new LoggingHandler(LogLevel.DEBUG));
 			// Set the ChannelHandler which is used to serve the request for the
 			// Channel's
 			bootstrap.childHandler(new NettyChannelInitializer());
 
-			executor = new SimpleExecutor<Command>();
+			executor = new SimpleExecutor<Command, CommandResponse>();
 			loadExecutor(executor);
 		} catch (Exception e) {
 			closeGracefully();
-			logger.error("init netty server error.", e);
+			logger.error(AkxProject.PLN + " init openzaly netty-server error.", e);
 			System.exit(-10);
 		}
 	}
 
-	public void start(String address, int port) {
+	public void start(String address, int port) throws TcpServerException {
 		try {
-			if (bootstrap != null) {
-				ChannelFuture channelFuture = bootstrap.bind(address, port).sync();
-				channelFuture.channel().closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
+			ChannelFuture channelFuture = bootstrap.bind(address, port).sync();
+			channelFuture.channel().closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
 
-					@Override
-					public void operationComplete(Future<? super Void> future) throws Exception {
-						closeGracefully();
-					}
-				});
-			}
+				@Override
+				public void operationComplete(Future<? super Void> future) throws Exception {
+					closeGracefully();
+				}
+			});
 		} catch (Exception e) {
 			closeGracefully();
-			logger.error("start netty server error.", e);
-			System.exit(-100);
+			throw new TcpServerException("start openzaly tcp-server error", e);
 		}
 	}
 
@@ -150,12 +152,12 @@ public abstract class NettyServer {
 
 			channel.pipeline().addLast(new MessageDecoder());
 			channel.pipeline().addLast(new MessageEncoder());
-			channel.pipeline().addLast("timeout", new IdleStateHandler(60, 60, 60, TimeUnit.SECONDS));
-			
+			channel.pipeline().addLast("timeout", new IdleStateHandler(60 * 5, 60 * 5, 60 * 5, TimeUnit.SECONDS));
+
 			// ch.pipeline().addLast(new SslHandler(sslEngine));
 
-			channel.pipeline().addLast("readTimeoutHandler", new ReadTimeoutHandler(20, TimeUnit.SECONDS));
-			channel.pipeline().addLast("writeTimeoutHandler", new WriteTimeoutHandler(20, TimeUnit.SECONDS));
+			channel.pipeline().addLast("readTimeoutHandler", new ReadTimeoutHandler(60 * 5, TimeUnit.SECONDS));
+			channel.pipeline().addLast("writeTimeoutHandler", new WriteTimeoutHandler(60 * 5, TimeUnit.SECONDS));
 			channel.pipeline().addLast(new NettyServerHandler(executor));
 		}
 
@@ -176,9 +178,9 @@ public abstract class NettyServer {
 				childGroup.terminationFuture().sync();
 			}
 		} catch (Exception es) {
-			logger.error("shutdown netty gracefully error.", es);
+			logger.error(AkxProject.PLN + " shutdown netty gracefully error.", es);
 		}
 	}
 
-	public abstract void loadExecutor(AbstracteExecutor<Command> executor);
+	public abstract void loadExecutor(AbstracteExecutor<Command, CommandResponse> executor);
 }

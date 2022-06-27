@@ -18,63 +18,57 @@ package com.akaxin.site.message.user2.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.akaxin.common.channel.ChannelSession;
 import com.akaxin.common.command.Command;
-import com.akaxin.common.command.RedisCommand;
-import com.akaxin.common.constant.CommandConst;
-import com.akaxin.proto.client.ImStcMessageProto;
+import com.akaxin.common.logs.LogUtils;
 import com.akaxin.proto.core.CoreProto;
-import com.akaxin.proto.core.CoreProto.MsgType;
 import com.akaxin.proto.site.ImCtsMessageProto;
 import com.akaxin.site.storage.api.IMessageDao;
 import com.akaxin.site.storage.bean.U2MessageBean;
 import com.akaxin.site.storage.service.MessageDaoService;
 
-import io.netty.channel.Channel;
-
-public class U2MessageVoiceSecretHandler extends AbstractUserHandler<Command> {
+/**
+ * 二人加密语音
+ * 
+ * @author Sam{@link an.guoyue254@gmail.com}
+ * @since 2018-04-26 15:11:42
+ */
+public class U2MessageVoiceSecretHandler extends AbstractU2Handler<Command> {
 	private static final Logger logger = LoggerFactory.getLogger(U2MessageVoiceSecretHandler.class);
 	private IMessageDao messageDao = new MessageDaoService();
 
-	public boolean handle(Command command) {
-		ChannelSession channelSession = command.getChannelSession();
-
+	public Boolean handle(Command command) {
 		try {
-			ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest
-					.parseFrom(command.getParams());
-
-			int type = request.getType().getNumber();
+			int type = command.getMsgType();
 
 			if (CoreProto.MsgType.SECRET_VOICE_VALUE == type) {
-				logger.info("U2 Message SecretVoice type={}", type);
+				ImCtsMessageProto.ImCtsMessageRequest request = ImCtsMessageProto.ImCtsMessageRequest
+						.parseFrom(command.getParams());
+				String siteUserId = command.getSiteUserId();
+				String proxySiteUserId = request.getSecretVoice().getSiteUserId();
+				String siteFriendId = request.getSecretVoice().getSiteFriendId();
 
-				String site_user_id = request.getSecretVoice().getSiteUserId();
-				String site_friend_id = request.getSecretVoice().getSiteFriendId();
-				String msg_id = request.getSecretVoice().getMsgId();
-				String ts_key = request.getSecretVoice().getTsKey();
-				String ts_device_id = request.getSecretVoice().getSiteDeviceId();
-				String secretVoiceId = request.getSecretVoice().getVoicdId();
+				String msgId = request.getSecretVoice().getMsgId();
+				String tsKey = request.getSecretVoice().getBase64TsKey();
+				String toDeviceId = request.getSecretVoice().getToDeviceId();
+				String secretVoiceId = request.getSecretVoice().getVoiceId();
 
-				command.setSiteUserId(site_user_id);
-				command.setSiteFriendId(site_friend_id);
-
+				long msgTime = System.currentTimeMillis();
 				U2MessageBean u2Bean = new U2MessageBean();
-				u2Bean.setMsgId(msg_id);
+				u2Bean.setMsgId(msgId);
 				u2Bean.setMsgType(type);
-				u2Bean.setSendUserId(site_user_id);
-				u2Bean.setSiteUserId(site_friend_id);
+				u2Bean.setSiteUserId(siteFriendId);
+				u2Bean.setSendUserId(command.isProxy() ? proxySiteUserId : siteUserId);
+				u2Bean.setReceiveUserId(siteFriendId);
 				u2Bean.setContent(secretVoiceId);
-				u2Bean.setTsKey(ts_key);
-				u2Bean.setDeviceId(ts_device_id);
-				u2Bean.setMsgTime(System.currentTimeMillis());
+				u2Bean.setTsKey(tsKey);
+				u2Bean.setDeviceId(toDeviceId);
+				u2Bean.setMsgTime(msgTime);
 
-				logger.info("U2 Message SecretVoice bean={}", u2Bean.toString());
+				LogUtils.requestDebugLog(logger, command, u2Bean.toString());
 
-				boolean saveRes = messageDao.saveU2Message(u2Bean);
-
-				msgResponse(channelSession.getChannel(), command, site_user_id, site_friend_id, msg_id);
-
-				return saveRes;
+				boolean success = messageDao.saveU2Message(u2Bean);
+				msgStatusResponse(command, msgId, msgTime, success);
+				return success;
 			}
 
 			return true;
@@ -85,20 +79,27 @@ public class U2MessageVoiceSecretHandler extends AbstractUserHandler<Command> {
 		return false;
 	}
 
-	private void msgResponse(Channel channel, Command command, String from, String to, String msgId) {
-		CoreProto.MsgStatus status = CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgStatus(1).build();
-
-		ImStcMessageProto.MsgWithPointer statusMsg = ImStcMessageProto.MsgWithPointer.newBuilder()
-				.setType(MsgType.MSG_STATUS).setStatus(status).build();
-
-		ImStcMessageProto.ImStcMessageRequest request = ImStcMessageProto.ImStcMessageRequest.newBuilder()
-				.addList(0, statusMsg).build();
-
-		CoreProto.TransportPackageData data = CoreProto.TransportPackageData.newBuilder()
-				.setData(request.toByteString()).build();
-
-		channel.writeAndFlush(
-				new RedisCommand().add(CommandConst.PROTOCOL_VERSION).add(CommandConst.IM_MSG_TOCLIENT).add(data.toByteArray()));
-
-	}
+	// private void msgResponse(Channel channel, Command command, String from,
+	// String to, String msgId, long msgTime) {
+	// CoreProto.MsgStatus status =
+	// CoreProto.MsgStatus.newBuilder().setMsgId(msgId).setMsgServerTime(msgTime)
+	// .setMsgStatus(1).build();
+	//
+	// ImStcMessageProto.MsgWithPointer statusMsg =
+	// ImStcMessageProto.MsgWithPointer.newBuilder()
+	// .setType(MsgType.MSG_STATUS).setStatus(status).build();
+	//
+	// ImStcMessageProto.ImStcMessageRequest request =
+	// ImStcMessageProto.ImStcMessageRequest.newBuilder()
+	// .addList(0, statusMsg).build();
+	//
+	// CoreProto.TransportPackageData data =
+	// CoreProto.TransportPackageData.newBuilder()
+	// .setData(request.toByteString()).build();
+	//
+	// channel.writeAndFlush(new
+	// RedisCommand().add(CommandConst.PROTOCOL_VERSION).add(CommandConst.IM_MSG_TOCLIENT)
+	// .add(data.toByteArray()));
+	//
+	// }
 }

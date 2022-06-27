@@ -15,15 +15,15 @@ public final class ApiSiteConfigProto {
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   public interface ApiSiteConfigRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:platform.ApiSiteConfigRequest)
+      // @@protoc_insertion_point(interface_extends:site.ApiSiteConfigRequest)
       com.google.protobuf.MessageOrBuilder {
   }
   /**
-   * Protobuf type {@code platform.ApiSiteConfigRequest}
+   * Protobuf type {@code site.ApiSiteConfigRequest}
    */
   public  static final class ApiSiteConfigRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:platform.ApiSiteConfigRequest)
+      // @@protoc_insertion_point(message_implements:site.ApiSiteConfigRequest)
       ApiSiteConfigRequestOrBuilder {
     // Use ApiSiteConfigRequest.newBuilder() to construct.
     private ApiSiteConfigRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
@@ -69,12 +69,12 @@ public final class ApiSiteConfigProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigRequest_descriptor;
+      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigRequest_fieldAccessorTable
+      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequest.class, com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequest.Builder.class);
     }
@@ -207,20 +207,20 @@ public final class ApiSiteConfigProto {
       return builder;
     }
     /**
-     * Protobuf type {@code platform.ApiSiteConfigRequest}
+     * Protobuf type {@code site.ApiSiteConfigRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:platform.ApiSiteConfigRequest)
+        // @@protoc_insertion_point(builder_implements:site.ApiSiteConfigRequest)
         com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigRequest_descriptor;
+        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigRequest_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigRequest_fieldAccessorTable
+        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequest.class, com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequest.Builder.class);
       }
@@ -247,7 +247,7 @@ public final class ApiSiteConfigProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigRequest_descriptor;
+        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigRequest_descriptor;
       }
 
       public com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequest getDefaultInstanceForType() {
@@ -341,10 +341,10 @@ public final class ApiSiteConfigProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:platform.ApiSiteConfigRequest)
+      // @@protoc_insertion_point(builder_scope:site.ApiSiteConfigRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:platform.ApiSiteConfigRequest)
+    // @@protoc_insertion_point(class_scope:site.ApiSiteConfigRequest)
     private static final com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequest DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigRequest();
@@ -380,7 +380,7 @@ public final class ApiSiteConfigProto {
   }
 
   public interface ApiSiteConfigResponseOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:platform.ApiSiteConfigResponse)
+      // @@protoc_insertion_point(interface_extends:site.ApiSiteConfigResponse)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -409,11 +409,11 @@ public final class ApiSiteConfigProto {
     com.akaxin.proto.core.ConfigProto.SiteConfigOrBuilder getSiteConfigOrBuilder();
   }
   /**
-   * Protobuf type {@code platform.ApiSiteConfigResponse}
+   * Protobuf type {@code site.ApiSiteConfigResponse}
    */
   public  static final class ApiSiteConfigResponse extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:platform.ApiSiteConfigResponse)
+      // @@protoc_insertion_point(message_implements:site.ApiSiteConfigResponse)
       ApiSiteConfigResponseOrBuilder {
     // Use ApiSiteConfigResponse.newBuilder() to construct.
     private ApiSiteConfigResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
@@ -473,12 +473,12 @@ public final class ApiSiteConfigProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigResponse_descriptor;
+      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigResponse_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigResponse_fieldAccessorTable
+      return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponse.class, com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponse.Builder.class);
     }
@@ -660,20 +660,20 @@ public final class ApiSiteConfigProto {
       return builder;
     }
     /**
-     * Protobuf type {@code platform.ApiSiteConfigResponse}
+     * Protobuf type {@code site.ApiSiteConfigResponse}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:platform.ApiSiteConfigResponse)
+        // @@protoc_insertion_point(builder_implements:site.ApiSiteConfigResponse)
         com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponseOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigResponse_descriptor;
+        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigResponse_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigResponse_fieldAccessorTable
+        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigResponse_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponse.class, com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponse.Builder.class);
       }
@@ -706,7 +706,7 @@ public final class ApiSiteConfigProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_platform_ApiSiteConfigResponse_descriptor;
+        return com.akaxin.proto.site.ApiSiteConfigProto.internal_static_site_ApiSiteConfigResponse_descriptor;
       }
 
       public com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponse getDefaultInstanceForType() {
@@ -961,10 +961,10 @@ public final class ApiSiteConfigProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:platform.ApiSiteConfigResponse)
+      // @@protoc_insertion_point(builder_scope:site.ApiSiteConfigResponse)
     }
 
-    // @@protoc_insertion_point(class_scope:platform.ApiSiteConfigResponse)
+    // @@protoc_insertion_point(class_scope:site.ApiSiteConfigResponse)
     private static final com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponse DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new com.akaxin.proto.site.ApiSiteConfigProto.ApiSiteConfigResponse();
@@ -1000,15 +1000,15 @@ public final class ApiSiteConfigProto {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_platform_ApiSiteConfigRequest_descriptor;
+    internal_static_site_ApiSiteConfigRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_platform_ApiSiteConfigRequest_fieldAccessorTable;
+      internal_static_site_ApiSiteConfigRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_platform_ApiSiteConfigResponse_descriptor;
+    internal_static_site_ApiSiteConfigResponse_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_platform_ApiSiteConfigResponse_fieldAccessorTable;
+      internal_static_site_ApiSiteConfigResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1018,14 +1018,14 @@ public final class ApiSiteConfigProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\032site/api_site_config.proto\022\010platform\032\021" +
-      "core/config.proto\"\026\n\024ApiSiteConfigReques" +
-      "t\">\n\025ApiSiteConfigResponse\022%\n\013site_confi" +
-      "g\030\001 \001(\0132\020.core.SiteConfig2a\n\024ApiSiteConf" +
-      "igService\022I\n\006config\022\036.platform.ApiSiteCo" +
-      "nfigRequest\032\037.platform.ApiSiteConfigResp" +
-      "onseB+\n\025com.akaxin.proto.siteB\022ApiSiteCo" +
-      "nfigProtob\006proto3"
+      "\n\032site/api_site_config.proto\022\004site\032\021core" +
+      "/config.proto\"\026\n\024ApiSiteConfigRequest\">\n" +
+      "\025ApiSiteConfigResponse\022%\n\013site_config\030\001 " +
+      "\001(\0132\020.core.SiteConfig2Y\n\024ApiSiteConfigSe" +
+      "rvice\022A\n\006config\022\032.site.ApiSiteConfigRequ" +
+      "est\032\033.site.ApiSiteConfigResponseB+\n\025com." +
+      "akaxin.proto.siteB\022ApiSiteConfigProtob\006p" +
+      "roto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1040,17 +1040,17 @@ public final class ApiSiteConfigProto {
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           com.akaxin.proto.core.ConfigProto.getDescriptor(),
         }, assigner);
-    internal_static_platform_ApiSiteConfigRequest_descriptor =
+    internal_static_site_ApiSiteConfigRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_platform_ApiSiteConfigRequest_fieldAccessorTable = new
+    internal_static_site_ApiSiteConfigRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_platform_ApiSiteConfigRequest_descriptor,
+        internal_static_site_ApiSiteConfigRequest_descriptor,
         new java.lang.String[] { });
-    internal_static_platform_ApiSiteConfigResponse_descriptor =
+    internal_static_site_ApiSiteConfigResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_platform_ApiSiteConfigResponse_fieldAccessorTable = new
+    internal_static_site_ApiSiteConfigResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_platform_ApiSiteConfigResponse_descriptor,
+        internal_static_site_ApiSiteConfigResponse_descriptor,
         new java.lang.String[] { "SiteConfig", });
     com.akaxin.proto.core.ConfigProto.getDescriptor();
   }

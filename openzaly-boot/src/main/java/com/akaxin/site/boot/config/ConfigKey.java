@@ -22,14 +22,18 @@ package com.akaxin.site.boot.config;
  * @since 2018-01-24 19:49:19
  */
 public interface ConfigKey {
+	// site.project.env
+	public String SITE_PROJECT_ENV = "site.project.env";
+	// 站点版本
+	public String SITE_VERSION = "site.version";
 	// 站点服务地址，提供用户和站点之间连接使用
 	public String SITE_ADDRESS = "site.address";
 	// 站点服务监听端口
 	public String SITE_PORT = "site.port";
 	// 站点启动的http服务地址，内部扩展功能访问使用
-	public String HTTP_ADDRESS = "http.address";
+	public String PLUGIN_API_ADDRESS = "pluginapi.address";
 	// http服务监听端口
-	public String HTTP_PORT = "http.port";
+	public String PLUGIN_API_PORT = "pluginapi.port";
 	// 站点管理扩展地址&&端口
 	public String SITE_ADMIN_ADDRESS = "site.admin.address";
 	public String SITE_ADMIN_PORT = "site.admin.port";

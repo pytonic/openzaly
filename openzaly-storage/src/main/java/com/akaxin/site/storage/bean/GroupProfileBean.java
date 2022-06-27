@@ -12,6 +12,18 @@ public class GroupProfileBean {
 	private int groupStatus;
 	private String createUserId;
 	private long createTime;
+	private boolean closeInviteGroupChat;
+
+	public int getDefaultState() {
+		return defaultState;
+	}
+
+	public void setDefaultState(int defaultState) {
+		this.defaultState = defaultState;
+	}
+
+	//默认添加状态
+	private int defaultState;
 
 	public int getId() {
 		return id;
@@ -83,6 +95,14 @@ public class GroupProfileBean {
 
 	public void setCreateTime(long createTime) {
 		this.createTime = createTime;
+	}
+
+	public boolean isCloseInviteGroupChat() {
+		return closeInviteGroupChat;
+	}
+
+	public void setCloseInviteGroupChat(boolean closeInviteGroupChat) {
+		this.closeInviteGroupChat = closeInviteGroupChat;
 	}
 
 	public String toString() {

@@ -42,6 +42,33 @@ public final class ApiGroupUpdateProfileProto {
      * <code>optional .core.GroupProfile profile = 1;</code>
      */
     com.akaxin.proto.core.GroupProto.GroupProfileOrBuilder getProfileOrBuilder();
+
+    /**
+     * <pre>
+     *新的群主
+     * </pre>
+     *
+     * <code>optional string new_group_owner = 2;</code>
+     */
+    java.lang.String getNewGroupOwner();
+    /**
+     * <pre>
+     *新的群主
+     * </pre>
+     *
+     * <code>optional string new_group_owner = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getNewGroupOwnerBytes();
+
+    /**
+     * <pre>
+     *是否关闭群聊邀请 true：打开 false：关闭
+     * </pre>
+     *
+     * <code>optional bool close_invite_group_chat = 3;</code>
+     */
+    boolean getCloseInviteGroupChat();
   }
   /**
    * Protobuf type {@code site.ApiGroupUpdateProfileRequest}
@@ -55,6 +82,8 @@ public final class ApiGroupUpdateProfileProto {
       super(builder);
     }
     private ApiGroupUpdateProfileRequest() {
+      newGroupOwner_ = "";
+      closeInviteGroupChat_ = false;
     }
 
     @java.lang.Override
@@ -93,6 +122,17 @@ public final class ApiGroupUpdateProfileProto {
                 profile_ = subBuilder.buildPartial();
               }
 
+              break;
+            }
+            case 18: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              newGroupOwner_ = s;
+              break;
+            }
+            case 24: {
+
+              closeInviteGroupChat_ = input.readBool();
               break;
             }
           }
@@ -151,6 +191,61 @@ public final class ApiGroupUpdateProfileProto {
       return getProfile();
     }
 
+    public static final int NEW_GROUP_OWNER_FIELD_NUMBER = 2;
+    private volatile java.lang.Object newGroupOwner_;
+    /**
+     * <pre>
+     *新的群主
+     * </pre>
+     *
+     * <code>optional string new_group_owner = 2;</code>
+     */
+    public java.lang.String getNewGroupOwner() {
+      java.lang.Object ref = newGroupOwner_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        newGroupOwner_ = s;
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     *新的群主
+     * </pre>
+     *
+     * <code>optional string new_group_owner = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNewGroupOwnerBytes() {
+      java.lang.Object ref = newGroupOwner_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        newGroupOwner_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int CLOSE_INVITE_GROUP_CHAT_FIELD_NUMBER = 3;
+    private boolean closeInviteGroupChat_;
+    /**
+     * <pre>
+     *是否关闭群聊邀请 true：打开 false：关闭
+     * </pre>
+     *
+     * <code>optional bool close_invite_group_chat = 3;</code>
+     */
+    public boolean getCloseInviteGroupChat() {
+      return closeInviteGroupChat_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -166,6 +261,12 @@ public final class ApiGroupUpdateProfileProto {
       if (profile_ != null) {
         output.writeMessage(1, getProfile());
       }
+      if (!getNewGroupOwnerBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, newGroupOwner_);
+      }
+      if (closeInviteGroupChat_ != false) {
+        output.writeBool(3, closeInviteGroupChat_);
+      }
     }
 
     public int getSerializedSize() {
@@ -176,6 +277,13 @@ public final class ApiGroupUpdateProfileProto {
       if (profile_ != null) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, getProfile());
+      }
+      if (!getNewGroupOwnerBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, newGroupOwner_);
+      }
+      if (closeInviteGroupChat_ != false) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, closeInviteGroupChat_);
       }
       memoizedSize = size;
       return size;
@@ -198,6 +306,10 @@ public final class ApiGroupUpdateProfileProto {
         result = result && getProfile()
             .equals(other.getProfile());
       }
+      result = result && getNewGroupOwner()
+          .equals(other.getNewGroupOwner());
+      result = result && (getCloseInviteGroupChat()
+          == other.getCloseInviteGroupChat());
       return result;
     }
 
@@ -212,6 +324,11 @@ public final class ApiGroupUpdateProfileProto {
         hash = (37 * hash) + PROFILE_FIELD_NUMBER;
         hash = (53 * hash) + getProfile().hashCode();
       }
+      hash = (37 * hash) + NEW_GROUP_OWNER_FIELD_NUMBER;
+      hash = (53 * hash) + getNewGroupOwner().hashCode();
+      hash = (37 * hash) + CLOSE_INVITE_GROUP_CHAT_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+          getCloseInviteGroupChat());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -336,6 +453,10 @@ public final class ApiGroupUpdateProfileProto {
           profile_ = null;
           profileBuilder_ = null;
         }
+        newGroupOwner_ = "";
+
+        closeInviteGroupChat_ = false;
+
         return this;
       }
 
@@ -363,6 +484,8 @@ public final class ApiGroupUpdateProfileProto {
         } else {
           result.profile_ = profileBuilder_.build();
         }
+        result.newGroupOwner_ = newGroupOwner_;
+        result.closeInviteGroupChat_ = closeInviteGroupChat_;
         onBuilt();
         return result;
       }
@@ -406,6 +529,13 @@ public final class ApiGroupUpdateProfileProto {
         if (other == com.akaxin.proto.site.ApiGroupUpdateProfileProto.ApiGroupUpdateProfileRequest.getDefaultInstance()) return this;
         if (other.hasProfile()) {
           mergeProfile(other.getProfile());
+        }
+        if (!other.getNewGroupOwner().isEmpty()) {
+          newGroupOwner_ = other.newGroupOwner_;
+          onChanged();
+        }
+        if (other.getCloseInviteGroupChat() != false) {
+          setCloseInviteGroupChat(other.getCloseInviteGroupChat());
         }
         onChanged();
         return this;
@@ -584,6 +714,133 @@ public final class ApiGroupUpdateProfileProto {
           profile_ = null;
         }
         return profileBuilder_;
+      }
+
+      private java.lang.Object newGroupOwner_ = "";
+      /**
+       * <pre>
+       *新的群主
+       * </pre>
+       *
+       * <code>optional string new_group_owner = 2;</code>
+       */
+      public java.lang.String getNewGroupOwner() {
+        java.lang.Object ref = newGroupOwner_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          newGroupOwner_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       *新的群主
+       * </pre>
+       *
+       * <code>optional string new_group_owner = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNewGroupOwnerBytes() {
+        java.lang.Object ref = newGroupOwner_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          newGroupOwner_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       *新的群主
+       * </pre>
+       *
+       * <code>optional string new_group_owner = 2;</code>
+       */
+      public Builder setNewGroupOwner(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        newGroupOwner_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *新的群主
+       * </pre>
+       *
+       * <code>optional string new_group_owner = 2;</code>
+       */
+      public Builder clearNewGroupOwner() {
+        
+        newGroupOwner_ = getDefaultInstance().getNewGroupOwner();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *新的群主
+       * </pre>
+       *
+       * <code>optional string new_group_owner = 2;</code>
+       */
+      public Builder setNewGroupOwnerBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        newGroupOwner_ = value;
+        onChanged();
+        return this;
+      }
+
+      private boolean closeInviteGroupChat_ ;
+      /**
+       * <pre>
+       *是否关闭群聊邀请 true：打开 false：关闭
+       * </pre>
+       *
+       * <code>optional bool close_invite_group_chat = 3;</code>
+       */
+      public boolean getCloseInviteGroupChat() {
+        return closeInviteGroupChat_;
+      }
+      /**
+       * <pre>
+       *是否关闭群聊邀请 true：打开 false：关闭
+       * </pre>
+       *
+       * <code>optional bool close_invite_group_chat = 3;</code>
+       */
+      public Builder setCloseInviteGroupChat(boolean value) {
+        
+        closeInviteGroupChat_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       *是否关闭群聊邀请 true：打开 false：关闭
+       * </pre>
+       *
+       * <code>optional bool close_invite_group_chat = 3;</code>
+       */
+      public Builder clearCloseInviteGroupChat() {
+        
+        closeInviteGroupChat_ = false;
+        onChanged();
+        return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1019,14 +1276,16 @@ public final class ApiGroupUpdateProfileProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\"site/api_group_updateProfile.proto\022\004si" +
-      "te\032\020core/group.proto\"C\n\034ApiGroupUpdatePr" +
+      "te\032\020core/group.proto\"}\n\034ApiGroupUpdatePr" +
       "ofileRequest\022#\n\007profile\030\001 \001(\0132\022.core.Gro" +
-      "upProfile\"\037\n\035ApiGroupUpdateProfileRespon" +
-      "se2x\n\034ApiGroupUpdateProfileService\022X\n\rup" +
-      "dateProfile\022\".site.ApiGroupUpdateProfile" +
-      "Request\032#.site.ApiGroupUpdateProfileResp" +
-      "onseB3\n\025com.akaxin.proto.siteB\032ApiGroupU" +
-      "pdateProfileProtob\006proto3"
+      "upProfile\022\027\n\017new_group_owner\030\002 \001(\t\022\037\n\027cl" +
+      "ose_invite_group_chat\030\003 \001(\010\"\037\n\035ApiGroupU" +
+      "pdateProfileResponse2x\n\034ApiGroupUpdatePr" +
+      "ofileService\022X\n\rupdateProfile\022\".site.Api" +
+      "GroupUpdateProfileRequest\032#.site.ApiGrou" +
+      "pUpdateProfileResponseB3\n\025com.akaxin.pro" +
+      "to.siteB\032ApiGroupUpdateProfileProtob\006pro",
+      "to3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1046,7 +1305,7 @@ public final class ApiGroupUpdateProfileProto {
     internal_static_site_ApiGroupUpdateProfileRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_site_ApiGroupUpdateProfileRequest_descriptor,
-        new java.lang.String[] { "Profile", });
+        new java.lang.String[] { "Profile", "NewGroupOwner", "CloseInviteGroupChat", });
     internal_static_site_ApiGroupUpdateProfileResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_site_ApiGroupUpdateProfileResponse_fieldAccessorTable = new

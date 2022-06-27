@@ -25,8 +25,10 @@ import org.slf4j.LoggerFactory;
 import com.akaxin.proto.core.UserProto;
 import com.akaxin.site.storage.api.IFriendApplyDao;
 import com.akaxin.site.storage.api.IUserFriendDao;
+import com.akaxin.site.storage.bean.ApplyFriendBean;
 import com.akaxin.site.storage.bean.ApplyUserBean;
 import com.akaxin.site.storage.bean.SimpleUserBean;
+import com.akaxin.site.storage.bean.UserFriendBean;
 import com.akaxin.site.storage.service.FriendApplyDaoService;
 import com.akaxin.site.storage.service.UserFriendDaoService;
 
@@ -47,10 +49,29 @@ public class UserFriendDao {
 		return instance;
 	}
 
+	public int getUserFriendNum(String siteUserId) {
+		try {
+			return userFriendDao.getUserFriendNum(siteUserId);
+		} catch (SQLException e) {
+			logger.error("get user friend num error", e);
+		}
+		return -1;
+	}
+
 	public List<SimpleUserBean> getUserFriends(String userId) {
 		List<SimpleUserBean> friendList = new ArrayList<SimpleUserBean>();
 		try {
 			friendList = userFriendDao.getUserFriends(userId);
+		} catch (SQLException e) {
+			logger.error("get user friend list error", e);
+		}
+		return friendList;
+	}
+
+	public List<SimpleUserBean> getUserFriendsByPage(String siteUserId, int pageNum, int pageSize) {
+		List<SimpleUserBean> friendList = null;
+		try {
+			friendList = userFriendDao.getUserFriendsByPage(siteUserId, pageNum, pageSize);
 		} catch (SQLException e) {
 			logger.error("get user friend list error", e);
 		}
@@ -66,8 +87,17 @@ public class UserFriendDao {
 		return false;
 	}
 
+	// 查询二者是否为好友
+	public boolean isFriend(String siteUserId, String siteFriendId) throws SQLException {
+		return userFriendDao.queryIsFriendRelation(siteUserId, siteFriendId);
+	}
+
+	public boolean isNotFriend(String siteUserId, String siteFriendId) throws SQLException {
+		return !isFriend(siteUserId, siteFriendId);
+	}
+
 	public boolean agreeApply(String siteUserId, String siteFriendId, boolean agree) {
-		boolean result = false;
+		boolean result = true;
 		try {
 			if (agree) {
 				if (userFriendDao.queryRelation(siteUserId, siteFriendId) != RELATION_NUMBERo) {
@@ -77,14 +107,23 @@ public class UserFriendDao {
 					result = userFriendDao.saveRelation(siteFriendId, siteUserId, RELATION_NUMBERo) && result;
 				}
 			}
-			if (result = true) {
-				result = friendApplyDao.deleteApply(siteFriendId, siteUserId);
-				result = friendApplyDao.deleteApply(siteUserId, siteFriendId);
-			}
 		} catch (Exception e) {
+			result = false;
 			logger.error("agree friend apply error.", e);
 		}
 		return result;
+	}
+
+	public ApplyFriendBean agreeApplyWithClear(String siteUserId, String siteFriendId) {
+		ApplyFriendBean bean = null;
+		try {
+			bean = friendApplyDao.getApplyInfo(siteUserId, siteFriendId);
+			friendApplyDao.deleteApply(siteFriendId, siteUserId);
+			friendApplyDao.deleteApply(siteUserId, siteFriendId);
+		} catch (SQLException e) {
+			logger.error("get apply friend info error", e);
+		}
+		return bean;
 	}
 
 	public UserProto.UserRelation getUserRelation(String siteUserId, String siteFriendId) {
@@ -159,5 +198,50 @@ public class UserFriendDao {
 			logger.error("delete friend error.", e);
 		}
 		return result;
+	}
+
+	public UserFriendBean getFriendSetting(String siteUserId, String siteFriendId) {
+		try {
+			UserFriendBean bean = userFriendDao.getFriendSetting(siteUserId, siteFriendId);
+			if (bean == null) {
+				bean = new UserFriendBean();
+				bean.setMute(false);
+			}
+			return bean;
+		} catch (SQLException e) {
+			logger.error("get friend setting error", e);
+		}
+		return null;
+	}
+
+	public boolean updateFriendSetting(String siteUserId, UserFriendBean bean) {
+		try {
+			return userFriendDao.updateFriendSetting(siteUserId, bean);
+		} catch (SQLException e) {
+			logger.error("update friend setting error", e);
+		}
+		return false;
+	}
+
+	public boolean getFriendMute(String siteUserId, String siteFriendId) throws SQLException {
+		return userFriendDao.isMute(siteUserId, siteFriendId);
+	}
+
+	public boolean updateFriendMute(String siteUserId, String siteFriendId, boolean mute) {
+		try {
+			return userFriendDao.updateMute(siteUserId, siteFriendId, mute);
+		} catch (SQLException e) {
+			logger.error("update friend mute error", e);
+		}
+		return false;
+	}
+
+	public boolean remarkFriend(String siteUserId, String siteFriendId, String aliasName, String aliasInLatin) {
+		try {
+			return userFriendDao.remarkFriend(siteUserId, siteFriendId, aliasName, aliasInLatin);
+		} catch (SQLException e) {
+			logger.error("update friend mute error", e);
+		}
+		return false;
 	}
 }
